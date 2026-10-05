@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+requests
+pydantic
+groq
+scikit-learn>=1.5,<2
+transformers>=4.40,<5
+torch>=2.2
+datasets>=2.19
+scipy>=1.13
+numpy>=1.26
+joblib

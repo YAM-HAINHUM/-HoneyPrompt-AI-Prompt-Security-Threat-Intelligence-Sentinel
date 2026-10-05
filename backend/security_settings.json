@@ -1,0 +1,5 @@
+{
+  "warning_threshold": 3,
+  "block_threshold": 5,
+  "block_cooldown_minutes": 30
+}
