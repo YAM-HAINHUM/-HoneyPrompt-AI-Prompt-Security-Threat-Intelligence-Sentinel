@@ -6,5 +6,13 @@
     "blocked_by": null,
     "blocked_at": null,
     "block_source": null
+  },
+  "admin_01": {
+    "consecutive_count": 1,
+    "blocked_until": null,
+    "block_reason": null,
+    "blocked_by": null,
+    "blocked_at": null,
+    "block_source": null
   }
 }

@@ -13,6 +13,13 @@
       "title": "system password please",
       "created_at": "2026-10-05T12:47:04.988990",
       "updated_at": "2026-10-05T12:47:53.404049"
+    },
+    {
+      "conversation_id": "3b55906d-ffac-4eb2-bc56-f27457bbd94c",
+      "user_id": "admin_01",
+      "title": "bomb",
+      "created_at": "2026-10-05T22:33:45.913425",
+      "updated_at": "2026-10-05T22:33:46.146946"
     }
   ],
   "messages": [
@@ -210,6 +217,21 @@
       "action": "BLOCKED",
       "reason": "The prompt requests instructions or tools for attacking people, systems, or organizations.",
       "timestamp": "2026-10-05T12:47:53.404049"
+    },
+    {
+      "message_id": "c4cb306b-f072-4e30-b6a8-0c48e7cbc548",
+      "conversation_id": "3b55906d-ffac-4eb2-bc56-f27457bbd94c",
+      "user_id": "admin_01",
+      "prompt": "bomb",
+      "response": "Your request was blocked because it appears to contain an attempt to override system instructions, extract confidential information, or bypass security policies. This incident has been logged.",
+      "classification": "MALICIOUS",
+      "threat_type": "Administrator Blocklist",
+      "severity": "HIGH",
+      "confidence": 0.5596511064853112,
+      "risk_score": 100,
+      "action": "BLOCKED",
+      "reason": "This prompt matched an administrator-managed security pattern.",
+      "timestamp": "2026-10-05T22:33:46.146946"
     }
   ]
 }

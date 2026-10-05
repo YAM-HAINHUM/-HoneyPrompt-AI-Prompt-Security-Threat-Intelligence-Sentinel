@@ -6,6 +6,7 @@ import json
 from datetime import date, datetime, timedelta
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List
@@ -24,6 +25,7 @@ from soc_store import (
     get_threat_intelligence, detect_repeated_patterns, get_model_info,
 )
 from rate_limiter import is_rate_limited
+from reports_store import save_report_record, get_report_history
 
 load_dotenv()
 

@@ -195,6 +195,7 @@ body {
   padding: 24px;
   height: calc(100vh - 52px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* CARDS */
@@ -972,7 +973,7 @@ body {
 .notification-item strong { font-size: .77rem; }
 .notification-item span:not(.notification-severity) { color: var(--text-secondary); font-size: .67rem; }
 .notification-empty, .empty-state { margin: 0; padding: 15px 2px; color: var(--text-secondary); font-size: .8rem; }
-.page-container { height: calc(100dvh - 66px); padding: 28px clamp(18px, 3vw, 44px); position: relative; }
+.page-container { height: calc(100dvh - 66px); padding: 28px clamp(18px, 3vw, 44px); position: relative; overflow-y: auto; overflow-x: hidden; }
 
 /* ROLE DASHBOARDS */
 .role-dashboard { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; padding-bottom: 30px; animation: fadeIn .28s ease both; }

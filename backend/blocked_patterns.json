@@ -1,0 +1,17 @@
+[
+  {
+    "id": "3a5e2999-d376-4633-bf05-bf4c4b65be32",
+    "phrase": "bomb",
+    "is_active": true,
+    "created_by": "admin_01",
+    "created_at": "2026-10-05T22:33:33.290745",
+    "updated_at": "2026-10-05T22:33:53.356056"
+  },
+  {
+    "id": "213ef946-dcd9-435a-8850-1d6c384adfdf",
+    "phrase": "attack",
+    "is_active": true,
+    "created_by": "admin_01",
+    "created_at": "2026-10-05T22:33:39.281956"
+  }
+]

@@ -1,280 +1,1366 @@
-> **Train and integrate a high-performance NLP threat detection model for HoneyPrompt using the dataset located at:**
-> 
-> 
-> `C:\Users\HP\OneDrive\Desktop\HoneyPrompt_AI_Intrusion_Detection_System_AI_IDS_for_Commercial_Chatbots\Dataset`
-> 
-> 
-> **Do not rebuild, remove, or break the existing HoneyPrompt application.** First inspect the existing project structure, backend, frontend, database, APIs, and current detection logic, then integrate the trained model into the existing architecture.
-> 
-> 
-> 
-> ### 1. Dataset Preparation
-> 
-> 
-> - Inspect all files inside the `Dataset` folder and automatically identify the relevant training files and columns.
-> - Determine which columns contain the **prompt/text** and **label/category**.
-> - Show dataset size, columns, missing values, duplicate samples and class distribution before training.
-> - Clean empty, corrupted and duplicate prompts.
-> - Normalize text carefully without destroying important adversarial patterns.
-> - Check for class imbalance.
-> - Remove data leakage and near-duplicate samples between train/validation/test.
-> 
-> 
-> ### 2. Classification
-> 
-> Build a proper model capable of distinguishing:
-> 
-> 
-> 🟢 **SAFE** — legitimate/normal prompts
-> 
-> 🟡 **SUSPICIOUS** — probing, unusual or uncertain security-related prompts
-> 
-> 🔴 **MALICIOUS** — adversarial, unauthorized or harmful prompts
-> 
-> 
-> Where the dataset supports it, identify:
-> 
-> 
-> 
-> - Prompt Injection
-> - Jailbreak
-> - System Prompt Extraction
-> - Credential Extraction
-> - Role Manipulation
-> - Privilege Escalation
-> - Data Exfiltration
-> - Security Policy Bypass
-> - Harmful Request
-> 
-> **Do not fabricate labels that do not exist in the dataset.** If the dataset only supports binary classification, train the primary model on the available labels and create a separate properly labeled extension for the additional categories.
-> 
-> 
-> 
-> ### 3. Model Training
-> 
-> Use a strong NLP approach, preferably a **fine-tuned DistilBERT/BERT transformer**, rather than relying only on keywords or simple regex rules.
-> 
-> 
-> Pipeline:
-> 
-> 
-> `Dataset → Cleaning → Deduplication → Label Validation → Stratified Split → Tokenization → Fine-Tuning → Validation → Evaluation → Best Model Saving`
-> 
-> 
-> Use:
-> 
-> 
-> 
-> - Stratified train/validation/test split
-> - Class weighting or suitable sampling if required
-> - Early stopping
-> - Learning-rate scheduling
-> - Appropriate batch size
-> - Weight decay
-> - Best-model checkpointing
-> 
-> Optimize particularly for **malicious-prompt recall**, because missing an actual attack is more serious than a false positive.
-> 
-> 
-> 
-> ### 4. Evaluation
-> 
-> Generate:
-> 
-> 
-> 
-> - Accuracy
-> - Precision
-> - Recall
-> - F1-score
-> - ROC-AUC where applicable
-> - Confusion matrix
-> - Per-class metrics
-> - False-positive rate
-> - False-negative rate
-> 
-> Test the model on unseen examples and adversarial/paraphrased prompts.
-> 
-> 
-> 
-> ### 5. Dynamic Confidence
-> 
-> **Never use a fixed confidence such as 97%, 98% or 99%.**
-> 
-> 
-> Confidence must come from the actual model prediction for each prompt.
-> 
-> 
-> If appropriate, calibrate the model probabilities using a validation set.
-> 
-> 
-> Generate a dynamic result such as:
-> 
-> 
-> 
-> ```
-> {
-> "classification": "MALICIOUS",
-> "threat_type": "PROMPT_INJECTION",
-> "severity": "HIGH",
-> "confidence": 0.94,
-> "risk_score": 91,
-> "action": "BLOCKED"
-> }
-> ```
-> 
-> 
-> ### 6. HoneyPrompt Risk Engine
-> 
-> Combine the trained ML model with carefully designed rule/pattern detection so the system can catch both known and paraphrased attacks.
-> 
-> 
-> Architecture:
-> 
-> 
-> `User Prompt`
-> 
-> ↓
-> 
-> `Preprocessing`
-> 
-> ↓
-> 
-> `ML Threat Classifier`
-> 
-> +
-> 
-> `Security Rules / Indicators`
-> 
-> ↓
-> 
-> `Risk Scoring`
-> 
-> ↓
-> 
-> `SAFE / SUSPICIOUS / MALICIOUS`
-> 
-> ↓
-> 
-> `Threat Type + Severity + Confidence`
-> 
-> ↓
-> 
-> `ALLOWED / MONITORED / BLOCKED`
-> 
-> ↓
-> 
-> `LLM`
-> 
-> 
-> **The user's prompt must be analyzed independently of the LLM response.**
-> 
-> 
-> Do not classify a malicious prompt as SAFE simply because the LLM responds with:
-> 
-> 
-> `I'm sorry, but I can't help with that.`
-> 
-> 
-> 
-> ### 7. Integration With Existing Backend
-> 
-> Integrate the trained model into the existing HoneyPrompt backend without breaking existing APIs.
-> 
-> 
-> Load the trained model **once when the backend starts**, not for every request.
-> 
-> 
-> Update the existing `/api/chat` flow so the security analysis happens before the LLM request.
-> 
-> 
-> For:
-> 
-> 
-> **SAFE →** allow LLM request
-> 
-> **SUSPICIOUS →** allow/monitor and record security event
-> 
-> **MALICIOUS →** block request and return security response
-> 
-> 
-> 
-> ### 8. Frontend
-> 
-> Update the existing HoneyPrompt UI to display the **actual backend values dynamically**:
-> 
-> 
-> 
-> - 🟢/🟡/🔴 Classification
-> - Threat Type
-> - Severity
-> - Confidence
-> - Risk Score
-> - Action
-> - Reason
-> 
-> Remove any hardcoded/default:
-> 
-> 
-> `SAFE`
-> 
-> `Normal Query`
-> 
-> `97%`
-> 
-> `ALLOWED`
-> 
-> 
-> values.
-> 
-> 
-> 
-> ### 9. Testing
-> 
-> Create a comprehensive test suite containing:
-> 
-> 
-> 
-> - Normal conversations
-> - General questions
-> - Security education
-> - Security probing
-> - Prompt injection
-> - Jailbreak attempts
-> - System prompt extraction
-> - Credential extraction
-> - Role manipulation
-> - Privilege escalation
-> - Data exfiltration
-> - Harmful requests
-> - Obfuscated prompts
-> - Paraphrased attacks
-> - Previously unseen attack variations
-> 
-> Verify that the classifier does **not simply depend on exact keywords**.
-> 
-> 
-> 
-> ### 10. Training Report
-> 
-> Save a training report containing:
-> 
-> 
-> 
-> - Dataset size
-> - Dataset classes
-> - Class distribution
-> - Train/validation/test sizes
-> - Training configuration
-> - Best epoch
-> - Final metrics
-> - Confusion matrix
-> - Precision/Recall/F1
-> - False positives
-> - False negatives
-> - Example predictions
-> 
-> Save the final trained model and tokenizer in a dedicated model directory inside the existing project.
-> 
-> 
-> **Important:** First inspect the dataset and existing HoneyPrompt codebase before making changes. Reuse existing architecture wherever possible. Do not delete or replace working features. The final system must use the trained model for real-time prompt analysis and must produce different classifications and confidence values based on the actual input.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Amazon Q
+Did you know?
+Compact your conversation with /compact
+Select code & ask me to explain, debug or optimize it, or type / for quick actions.
+Upgrade HoneyPrompt Sentinel V2.4 by adding a complete Report & Export System for both ADMIN and USER panels.
+
+IMPORTANT:
+
+Do NOT rebuild or break the existing application.
+
+Keep the existing backend, database, authentication, RBAC, threat detection, chat history and UI.
+
+Add this as a new integrated feature.
+
+Reports must use REAL database data, not dummy/static data.
+
+Enforce permissions on the BACKEND, not only frontend.
+
+==================================================
+
+ADMIN REPORT & EXPORT CENTER
+Add a new Admin navigation item:
+
+Reports & Exports
+
+Create a professional report dashboard where an ADMIN can generate/download reports.
+
+Admin should be able to generate:
+
+A. Security Overview Report
+
+Total users
+
+Active/inactive/blocked users
+
+Total prompts
+
+SAFE prompts
+
+SUSPICIOUS prompts
+
+MALICIOUS prompts
+
+Blocked prompts
+
+Warning events
+
+Threat count by category
+
+Threat count by severity
+
+Detection confidence statistics
+
+Block rate
+
+Security score/trend
+
+Report generation date/time
+
+B. Threat Intelligence Report
+
+Prompt Injection
+
+Jailbreak Attempts
+
+System Prompt Extraction
+
+Credential Extraction
+
+Data Exfiltration
+
+Role Manipulation
+
+Privilege Escalation
+
+Security Policy Bypass
+
+Harmful Requests
+
+Other threats
+
+Frequency
+
+Severity
+
+Confidence
+
+Trends
+
+Top attack patterns
+
+Most targeted users
+
+Recent critical threats
+
+C. User Security Report
+
+User ID
+
+Username
+
+Email
+
+Account status
+
+Total prompts
+
+Safe/suspicious/malicious count
+
+Blocked prompts
+
+Consecutive malicious attempts
+
+Risk score
+
+Current restriction status
+
+Last activity
+
+Last threat
+
+Account creation date
+
+D. Audit Log Report
+
+Timestamp
+
+Admin/User
+
+Action
+
+Target
+
+Threat
+
+Severity
+
+Result
+
+Reason
+
+Request ID
+
+Session ID
+
+E. Incident Report
+
+Incident ID
+
+Created date
+
+User
+
+Threat
+
+Severity
+
+Status
+
+Description
+
+Actions taken
+
+Assigned admin
+
+Resolution
+
+Resolution time
+
+F. Chat/Security Activity Report
+
+Total conversations
+
+Total messages
+
+Threat detections
+
+Blocked messages
+
+Suspicious activity
+
+User activity trends
+
+==================================================
+2. ADMIN REPORT FILTERS
+==================================================
+
+Before generating a report, allow:
+
+Report type
+
+Date range: Today Last 7 Days Last 30 Days Last 90 Days Custom Range
+
+Classification: All / Safe / Suspicious / Malicious
+
+Severity: All / Low / Medium / High / Critical
+
+Threat type
+
+User
+
+Action: Allowed / Monitored / Blocked
+
+Incident status
+
+Show a report preview before download.
+
+==================================================
+3. ADMIN EXPORT FORMATS
+==================================================
+
+Provide:
+
+[ Generate PDF ]
+[ Export Excel ]
+
+PDF:
+
+Professional HoneyPrompt branding
+
+Report title
+
+Generated by
+
+Generated date/time
+
+Applied filters
+
+Summary statistics
+
+Tables
+
+Charts where useful
+
+Threat distribution
+
+Security trends
+
+Page numbers
+
+Report footer
+
+Confidential/Security Report label
+
+Excel:
+Create a properly formatted .xlsx workbook.
+
+Use separate sheets where appropriate:
+
+Summary
+
+Users
+
+Prompts
+
+Threats
+
+Audit Logs
+
+Incidents
+
+Analytics
+
+Add headers, filters, proper column widths, dates and readable formatting.
+
+==================================================
+4. USER REPORT & EXPORT CENTER
+==================================================
+
+Add a new User navigation item:
+
+My Reports
+
+Users must ONLY be able to generate reports containing THEIR OWN data.
+
+User reports:
+
+A. Personal Security Report
+
+User name
+
+Account status
+
+Total prompts
+
+Safe prompts
+
+Suspicious prompts
+
+Malicious prompts
+
+Blocked prompts
+
+Threat categories
+
+Average confidence
+
+Personal security/risk score
+
+Current restrictions
+
+Security activity trend
+
+B. My Security History Report
+
+Date/time
+
+Prompt preview
+
+Classification
+
+Threat type
+
+Severity
+
+Confidence
+
+Action
+
+Reason
+
+C. My Chat Activity Report
+
+Conversations
+
+Messages
+
+Security detections
+
+Blocked messages
+
+Suspicious messages
+
+Recent activity
+
+D. My Security Alerts Report
+
+Alert date
+
+Alert type
+
+Severity
+
+Description
+
+Action taken
+
+Status
+
+==================================================
+5. USER EXPORT FORMATS
+==================================================
+
+User can select:
+
+[ Download PDF ]
+[ Export Excel ]
+
+PDF should contain only that user's authorized information.
+
+Excel workbook can contain:
+
+Summary
+
+Security History
+
+Threat History
+
+Chat Activity
+
+Security Alerts
+
+NEVER include:
+
+Other users' information
+
+Admin data
+
+Global audit logs
+
+System prompts
+
+API keys
+
+Passwords
+
+Secrets
+
+Internal security rules
+
+Sensitive backend information
+
+==================================================
+6. REPORT GENERATION UI
+==================================================
+
+Create a professional report-generation modal/page.
+
+Example:
+
+REPORT CENTER
+
+Report Type
+[ Security Overview ▼ ]
+
+Date Range
+[ Last 30 Days ▼ ]
+
+Classification
+[ All ▼ ]
+
+Severity
+[ All ▼ ]
+
+Threat Type
+[ All ▼ ]
+
+          [ Preview Report ]
+
+          [ Generate PDF ]
+          [ Export Excel ]
+Show:
+
+Number of records
+
+Date range
+
+Selected filters
+
+Last generated time
+
+Generation status
+
+Use loading states while generating.
+
+Example:
+"Generating security report..."
+"Preparing 2,481 records..."
+"Report generated successfully."
+
+Allow users to download the generated file.
+
+==================================================
+7. BACKEND API
+==================================================
+
+Create secure report endpoints.
+
+ADMIN examples:
+
+GET /api/admin/reports/security
+GET /api/admin/reports/threats
+GET /api/admin/reports/users
+GET /api/admin/reports/audit
+GET /api/admin/reports/incidents
+POST /api/admin/reports/pdf
+POST /api/admin/reports/excel
+
+USER examples:
+
+GET /api/user/reports/security
+GET /api/user/reports/history
+GET /api/user/reports/activity
+POST /api/user/reports/pdf
+POST /api/user/reports/excel
+
+Use the existing authentication and RBAC middleware.
+
+Backend MUST verify:
+
+Admin role for admin reports
+
+Authenticated user ownership for user reports
+
+Never rely on frontend role checks.
+
+==================================================
+8. REPORT HISTORY
+==================================================
+
+Store report-generation metadata.
+
+For each generated report store:
+
+Report ID
+
+User/Admin ID
+
+Report type
+
+Format
+
+Date range
+
+Filters
+
+Generated timestamp
+
+Number of records
+
+Generation status
+
+Admin can see report-generation history.
+
+Users can see only their own report history.
+
+==================================================
+9. SECURITY REQUIREMENTS
+==================================================
+
+Never expose passwords, API keys, tokens or secrets.
+
+Sanitize prompt previews.
+
+Apply existing RBAC.
+
+Apply pagination for large datasets.
+
+Do not load millions of records into memory unnecessarily.
+
+Use database aggregation where possible.
+
+Validate all report filters server-side.
+
+Prevent users from modifying user_id to access another user's reports.
+
+Log report generation in audit logs.
+
+Handle PDF/Excel generation errors gracefully.
+
+Do not expose stack traces to users.
+
+Use unique filenames/report IDs.
+
+Reports must contain real database information.
+
+==================================================
+10. REPORT FILE NAMING
+==================================================
+
+Use readable filenames such as:
+
+HoneyPrompt_Security_Report_2026-10-05.pdf
+HoneyPrompt_Threat_Report_2026-10-05.xlsx
+HoneyPrompt_User_Security_Report_2026-10-05.pdf
+
+==================================================
+11. FINAL UI
+==================================================
+
+ADMIN SIDEBAR:
+
+Security Command Center
+Security Alerts
+User Risk
+Threat Intelligence
+Threat Investigation
+Audit Logs
+Incidents
+Reports & Exports
+Security Policies
+AI Model Monitoring
+Security Testing
+Profile
+Settings
+
+USER SIDEBAR:
+
+Dashboard
+Secure Chat
+Chat History
+Security History
+Security Alerts
+My Reports
+Profile
+Settings
+
+Make the Report Center match the existing HoneyPrompt Sentinel V2.4 premium cybersecurity UI.
+
+Use real data, responsive design, professional tables, charts, filters, loading states, empty states, success/error notifications and secure download handling.
+
+Finally test:
+
+Admin PDF generation
+
+Admin Excel generation
+
+User PDF generation
+
+User Excel generation
+
+Date filters
+
+Threat filters
+
+Large datasets
+
+RBAC restrictions
+
+Unauthorized user report access
+
+Empty report results
+
+PDF/Excel generation failures
+
+Audit logging
+
+Do not remove or change existing HoneyPrompt functionality.
+
+Add a lightweight HoneyBee loading animation to HoneyPrompt.
+
+- Show a small futuristic honey bee gently flying/hovering in place.
+- Use the existing HoneyPrompt yellow/gold + dark theme.
+- Add subtle wing movement, soft glow, and a tiny honey/light trail.
+- Include a simple animated text: "HoneyPrompt is securing your request..."
+- Keep it premium, minimal, smooth, and cybersecurity-themed — not childish.
+- Use it for page loading, API requests, report generation, and chat processing.
+- Add a smooth fade-in/fade-out transition.
+- Keep CPU usage low and ensure it does not block user interaction.
+- Make it reusable as a single Loading component across the application.
+- Support both dark and light themes.
+- Do not change existing functionality or layouts unnecessarily.

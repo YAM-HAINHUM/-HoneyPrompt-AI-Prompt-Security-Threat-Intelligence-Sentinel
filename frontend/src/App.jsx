@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, LayoutDashboard, FileText, Hexagon, BarChart2, Settings, LogOut, Moon, Sun, User, ChevronDown, Activity, MessageSquare, Menu, X, Bell, SlidersHorizontal } from 'lucide-react';
+import { Shield, LayoutDashboard, FileText, Hexagon, BarChart2, Settings, LogOut, Moon, Sun, User, ChevronDown, Activity, MessageSquare, Menu, X, Bell, SlidersHorizontal, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
@@ -19,6 +19,18 @@ import LoadingState from './LoadingState';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
 import AdminPatternsPage from './AdminPatternsPage';
+import SOCCommandCenter from './SOCCommandCenter';
+import SOCAlerts from './SOCAlerts';
+import SOCThreatIntelligence from './SOCThreatIntelligence';
+import SOCUserRisk from './SOCUserRisk';
+import SOCThreatInvestigation from './SOCThreatInvestigation';
+import SOCAuditLogs from './SOCAuditLogs';
+import SOCRestrictions from './SOCRestrictions';
+import SOCModelMonitor from './SOCModelMonitor';
+import SOCSecurityTesting from './SOCSecurityTesting';
+import SOCIncidents from './SOCIncidents';
+import SOCReports from './SOCReports';
+import SOCPolicies from './SOCPolicies';
 import HoneyBeeBackground from './HoneyBeeBackground';
 import HoneyPromptLogo from './assets/honeyprompt-logo.png';
 import './App.css';
@@ -74,8 +86,11 @@ function ProtectedLayout() {
   if (authLoading) return <LoadingState label="Verifying your secure session..." fullScreen />;
   if (!user) return <Navigate to="/login" replace />;
 
-  const adminOnlyPaths = ['/sentinel', '/threats', '/logs', '/analytics', '/admin/patterns'];
-  if (!isAdmin && adminOnlyPaths.includes(location.pathname)) return <Navigate to="/dashboard" replace />;
+  const adminOnlyPaths = ['/sentinel', '/threats', '/logs', '/analytics', '/admin/patterns',
+    '/soc', '/soc/alerts', '/soc/threat-intel', '/soc/user-risk', '/soc/investigation',
+    '/soc/audit', '/soc/restrictions', '/soc/model', '/soc/testing', '/soc/incidents',
+    '/soc/reports', '/soc/policies'];
+  if (!isAdmin && adminOnlyPaths.some(p => location.pathname.startsWith(p))) return <Navigate to="/dashboard" replace />;
 
   const handleLogout = async () => {
     await logout();
@@ -84,18 +99,15 @@ function ProtectedLayout() {
 
   const closeMobileNav = () => setMobileNavOpen(false);
   const routeTitle = {
-    '/': 'Secure Chat',
-    '/dashboard': 'Dashboard',
-    '/sentinel': 'Live Sentinel',
-    '/threats': 'Threat Matrix',
-    '/logs': 'Audit Logs',
-    '/analytics': 'Analytics',
-    '/settings': 'Settings',
-    '/history': 'Security History',
-    '/chat-history': 'Chat History',
-    '/alerts': 'Security Alerts',
-    '/profile': 'Your Profile',
-    '/admin/patterns': 'Security Rules',
+    '/': 'Secure Chat', '/dashboard': 'Dashboard', '/sentinel': 'Live Sentinel',
+    '/threats': 'Threat Matrix', '/logs': 'Audit Logs', '/analytics': 'Analytics',
+    '/settings': 'Settings', '/history': 'Security History', '/chat-history': 'Chat History',
+    '/alerts': 'Security Alerts', '/profile': 'Your Profile', '/admin/patterns': 'Security Rules',
+    '/soc': 'Command Center', '/soc/alerts': 'Security Alerts', '/soc/threat-intel': 'Threat Intelligence',
+    '/soc/user-risk': 'User Risk', '/soc/investigation': 'Threat Investigation',
+    '/soc/audit': 'Audit Log', '/soc/restrictions': 'Active Restrictions',
+    '/soc/model': 'Model Monitor', '/soc/testing': 'Security Testing',
+    '/soc/incidents': 'Incidents', '/soc/reports': 'Reports', '/soc/policies': 'Security Policies',
   }[location.pathname] || 'Security Console';
   const visibleAlerts = isAdmin || userPreferences.inAppAlerts ? alerts : [];
   const unreadCount = isAdmin
@@ -141,6 +153,20 @@ function ProtectedLayout() {
             <LayoutDashboard size={17} /> Dashboard
           </NavLink>
           {isAdmin && <>
+            <div className="nav-section-label" style={{marginTop:8}}>SOC</div>
+            <NavLink to="/soc" end onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Shield size={17} /> Command Center</NavLink>
+            <NavLink to="/soc/alerts" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Bell size={17} /> Security Alerts</NavLink>
+            <NavLink to="/soc/user-risk" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><User size={17} /> User Risk</NavLink>
+            <NavLink to="/soc/threat-intel" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Threat Intel</NavLink>
+            <NavLink to="/soc/investigation" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Hexagon size={17} /> Investigation</NavLink>
+            <NavLink to="/soc/audit" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Audit Log</NavLink>
+            <NavLink to="/soc/restrictions" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Activity size={17} /> Restrictions</NavLink>
+            <NavLink to="/soc/model" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><SlidersHorizontal size={17} /> Model Monitor</NavLink>
+            <NavLink to="/soc/testing" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Shield size={17} /> Security Testing</NavLink>
+            <NavLink to="/soc/incidents" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><AlertTriangle size={17} /> Incidents</NavLink>
+            <NavLink to="/soc/reports" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Reports</NavLink>
+            <NavLink to="/soc/policies" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Settings size={17} /> Policies</NavLink>
+            <div className="nav-section-label" style={{marginTop:8}}>LEGACY</div>
             <NavLink to="/sentinel" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Activity size={17} /> Live Sentinel</NavLink>
             <NavLink to="/threats" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Hexagon size={17} /> Threat Matrix</NavLink>
             <NavLink to="/logs" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Audit Logs</NavLink>
@@ -230,6 +256,18 @@ function ProtectedLayout() {
             <Route path="/alerts" element={<UserAlertsPage />} />
             <Route path="/profile" element={<UserProfilePage />} />
             <Route path="/admin/patterns" element={<AdminPatternsPage />} />
+            <Route path="/soc" element={<SOCCommandCenter />} />
+            <Route path="/soc/alerts" element={<SOCAlerts />} />
+            <Route path="/soc/threat-intel" element={<SOCThreatIntelligence />} />
+            <Route path="/soc/user-risk" element={<SOCUserRisk />} />
+            <Route path="/soc/investigation" element={<SOCThreatInvestigation />} />
+            <Route path="/soc/audit" element={<SOCAuditLogs />} />
+            <Route path="/soc/restrictions" element={<SOCRestrictions />} />
+            <Route path="/soc/model" element={<SOCModelMonitor />} />
+            <Route path="/soc/testing" element={<SOCSecurityTesting />} />
+            <Route path="/soc/incidents" element={<SOCIncidents />} />
+            <Route path="/soc/reports" element={<SOCReports />} />
+            <Route path="/soc/policies" element={<SOCPolicies />} />
           </Routes>
         </div>
       </div>
