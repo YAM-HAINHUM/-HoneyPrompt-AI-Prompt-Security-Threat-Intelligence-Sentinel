@@ -6,7 +6,8 @@ import json
 from datetime import date, datetime, timedelta
 from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+import io
+from fastapi.responses import Response, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional, List
@@ -26,6 +27,21 @@ from soc_store import (
 )
 from rate_limiter import is_rate_limited
 from reports_store import save_report_record, get_report_history
+from reports_service import (
+    build_security_overview_report,
+    build_threat_intelligence_report,
+    build_user_security_report,
+    build_audit_log_report,
+    build_incidents_report,
+    build_chat_activity_report,
+    build_user_chats_report,
+    build_personal_security_report,
+    build_user_security_history_report,
+    build_user_chat_activity_report,
+    build_user_alerts_report,
+)
+from report_generators import generate_pdf, generate_excel
+from email_service import send_report_email
 
 load_dotenv()
 
@@ -160,7 +176,7 @@ def get_current_user_obj(credentials: HTTPAuthorizationCredentials = Depends(sec
     if not username:
         raise HTTPException(status_code=401, detail="Invalid token")
     users = _read_users()
-    user = users.get(username)
+    user = users.get(username.lower())
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if not user.get("is_active", True) or user.get("is_blocked", False):
@@ -315,6 +331,37 @@ class FalsePositiveReport(BaseModel):
 class PasswordChangeRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class ReportExportRequest(BaseModel):
+    report_type: str = "security_overview"
+    date_range: str = "30d"
+    date_from: str | None = None
+    date_to: str | None = None
+    classification: str | None = None
+    severity: str | None = None
+    threat_type: str | None = None
+    user: str | None = None
+    action: str | None = None
+    status: str | None = None
+
+
+class EmailReportRequest(BaseModel):
+    recipient_email: str
+    cc_email: str | None = None
+    subject: str | None = None
+    message: str | None = None
+    report_type: str = "security_overview"
+    format: str = "PDF"
+    date_range: str = "30d"
+    date_from: str | None = None
+    date_to: str | None = None
+    classification: str | None = None
+    severity: str | None = None
+    threat_type: str | None = None
+    user: str | None = None
+    action: str | None = None
+    status: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -500,9 +547,11 @@ async def admin_update_chat_block(username: str, update: TemporaryBlockUpdate, a
         raise HTTPException(status_code=404, detail="User not found")
     if users[key].get("role", "").casefold() == "admin" or key == admin["username"].casefold():
         raise HTTPException(status_code=400, detail="Administrator chat access cannot be changed here")
-    if update.duration_minutes < 0 or update.duration_minutes > 1440:
-        raise HTTPException(status_code=400, detail="Duration must be between 0 and 1440 minutes.")
+    if update.duration_minutes < -1 or update.duration_minutes > 52560000:
+        raise HTTPException(status_code=400, detail="Duration must be -1 (permanent) or between 0 and 52560000 minutes.")
     state = _chat_activity(key)
+    reason = update.reason.strip()[:500] or ("Restriction lifted by an administrator." if update.duration_minutes == 0 else "Manually restricted by an administrator.")
+
     if update.duration_minutes == 0:
         state["blocked_until"] = None
         state["consecutive_count"] = 0
@@ -510,12 +559,62 @@ async def admin_update_chat_block(username: str, update: TemporaryBlockUpdate, a
         state["blocked_by"] = None
         state["blocked_at"] = None
         state["block_source"] = None
+        users[key]["is_blocked"] = False
+        _write_users(users)
+        audit_log(admin["username"], "USER_UNBLOCKED", key, reason)
+        log_event(
+            "[SYSTEM NOTICE] Access Restriction Lifted",
+            {
+                "classification": "SAFE",
+                "threat_type": "Administrative Unblock",
+                "severity": "NONE",
+                "risk_score": 0,
+                "confidence": 1.0,
+                "action": "ALLOWED",
+                "reason": reason,
+            },
+            f"Your account access has been fully restored by an administrator ({admin['username']}).",
+            session_id="admin-notice",
+            user=key,
+            extra_fields={"blocked_by": admin["username"], "action_type": "UNBLOCK"}
+        )
     else:
         state["blocked_at"] = datetime.now().isoformat()
-        state["blocked_until"] = (datetime.now() + timedelta(minutes=update.duration_minutes)).isoformat()
-        state["block_reason"] = update.reason.strip()[:500] or "Manually restricted by an administrator."
+        if update.duration_minutes == -1:
+            state["blocked_until"] = "2099-12-31T23:59:59"
+            users[key]["is_blocked"] = True
+        else:
+            state["blocked_until"] = (datetime.now() + timedelta(minutes=update.duration_minutes)).isoformat()
+            users[key]["is_blocked"] = False
+        state["block_reason"] = reason
         state["blocked_by"] = admin["username"]
         state["block_source"] = "manual"
+        _write_users(users)
+        audit_log(admin["username"], "USER_BLOCKED", key, reason, {
+            "duration_minutes": update.duration_minutes,
+            "blocked_until": state["blocked_until"],
+        })
+        log_event(
+            "[SYSTEM NOTICE] Administrative Restriction Applied",
+            {
+                "classification": "MALICIOUS",
+                "threat_type": "Administrative Block",
+                "severity": "CRITICAL",
+                "risk_score": 100,
+                "confidence": 1.0,
+                "action": "BLOCKED",
+                "reason": reason,
+            },
+            f"Your access has been restricted by an administrator ({admin['username']}). Reason: {reason}",
+            session_id="admin-notice",
+            user=key,
+            extra_fields={
+                "blocked_until": state["blocked_until"],
+                "blocked_by": admin["username"],
+                "duration_minutes": update.duration_minutes,
+                "action_type": "BLOCK"
+            }
+        )
     _save_chat_activity(key, state)
     return {
         "username": key,
@@ -814,14 +913,8 @@ async def chat_proxy(request: ChatRequest, http_request: Request, current_user: 
             "client_ip": http_request.client.host if http_request.client else None,
         })
         add_message(conversation_id, username, user_message, BLOCKED_RESPONSE, classification, analysis["threat_type"], analysis["severity"], analysis["confidence"], analysis["risk_score"], action, analysis.get("reason", ""))
+        # Return only user-safe fields — no security classification details exposed to user frontend
         return {
-            "classification": classification,
-            "threat_type": analysis["threat_type"],
-            "severity": analysis["severity"],
-            "confidence": analysis["confidence"],
-            "risk_score": analysis["risk_score"],
-            "action": action,
-            "reason": analysis["reason"],
             "response": BLOCKED_RESPONSE,
             "conversation_id": conversation_id,
             "consecutive_count": count,
@@ -830,19 +923,6 @@ async def chat_proxy(request: ChatRequest, http_request: Request, current_user: 
             "warning": count >= warning_threshold,
             "blocked_until": blocked_until,
             "current_action": current_action,
-            # backward compat
-            "metadata": {
-                "threat_detected": True,
-                "risk_score": analysis["risk_score"],
-                "categories": analysis["categories"],
-                "classification": classification,
-                "threat_type": analysis["threat_type"],
-                "severity": analysis["severity"],
-                "confidence": analysis["confidence"],
-                "action": action,
-                "reason": analysis["reason"],
-                "model": "BLOCKED",
-            },
         }
 
     # STEP 3: Call LLM for SAFE / SUSPICIOUS
@@ -868,14 +948,8 @@ async def chat_proxy(request: ChatRequest, http_request: Request, current_user: 
         log_event(user_message, analysis, ai_reply, session_id, username)
         add_message(conversation_id, username, user_message, ai_reply, classification, analysis["threat_type"], analysis["severity"], analysis["confidence"], analysis["risk_score"], action, analysis.get("reason", ""))
 
+        # Return only user-safe fields — no security classification details exposed to user frontend
         return {
-            "classification": classification,
-            "threat_type": analysis["threat_type"],
-            "severity": analysis["severity"],
-            "confidence": analysis["confidence"],
-            "risk_score": analysis["risk_score"],
-            "action": action,
-            "reason": analysis["reason"],
             "response": ai_reply,
             "conversation_id": conversation_id,
             "consecutive_count": 0,
@@ -883,18 +957,6 @@ async def chat_proxy(request: ChatRequest, http_request: Request, current_user: 
             "block_threshold": block_threshold,
             "warning": False,
             "blocked_until": None,
-            "metadata": {
-                "threat_detected": analysis["is_threat"],
-                "risk_score": analysis["risk_score"],
-                "categories": analysis["categories"],
-                "classification": classification,
-                "threat_type": analysis["threat_type"],
-                "severity": analysis["severity"],
-                "confidence": analysis["confidence"],
-                "action": action,
-                "reason": analysis["reason"],
-                "model": "openai/gpt-oss-20b",
-            },
         }
 
     except AuthenticationError:
@@ -1013,7 +1075,46 @@ async def soc_threat_intelligence(hours: int = Query(24, ge=1, le=720), _admin: 
 # --- User Risk ---
 @app.get("/api/soc/user-risk")
 async def soc_all_user_risk(_admin: dict = Depends(admin_required)):
-    return get_all_user_risks()
+    users = _read_users()
+    now = datetime.now()
+    results = []
+    for uname, udata in users.items():
+        key = uname.casefold()
+        risk = get_user_risk(key)
+        state = _chat_activity(key)
+        blocked_until = state.get("blocked_until")
+        is_blocked_chat = False
+        if blocked_until:
+            try:
+                is_blocked_chat = datetime.fromisoformat(blocked_until) > now
+            except ValueError:
+                is_blocked_chat = False
+        is_account_blocked = bool(udata.get("is_blocked", False))
+
+        results.append({
+            "username": udata.get("username", uname),
+            "full_name": udata.get("full_name", uname),
+            "email": udata.get("email", ""),
+            "role": udata.get("role", "User"),
+            "is_active": udata.get("is_active", True),
+            "is_blocked": is_account_blocked or is_blocked_chat,
+            "created_at": udata.get("created_at"),
+            "risk_score": risk.get("risk_score", 0),
+            "risk_level": risk.get("risk_level", "LOW"),
+            "malicious_count": risk.get("malicious_count", 0),
+            "suspicious_count": risk.get("suspicious_count", 0),
+            "consecutive_attacks": risk.get("consecutive_attacks", 0),
+            "last_threat": risk.get("last_threat"),
+            "last_threat_type": risk.get("last_threat_type"),
+            "total_prompts": risk.get("total_prompts", 0),
+            "blocked_until": state.get("blocked_until") if is_blocked_chat or is_account_blocked else None,
+            "block_reason": state.get("block_reason"),
+            "blocked_by": state.get("blocked_by"),
+            "blocked_at": state.get("blocked_at"),
+            "block_source": state.get("block_source"),
+        })
+    results.sort(key=lambda r: (r.get("risk_score", 0), 1 if r.get("is_blocked") else 0), reverse=True)
+    return results
 
 @app.get("/api/soc/user-risk/{username}")
 async def soc_user_risk(username: str, admin: dict = Depends(admin_required)):
@@ -1162,31 +1263,483 @@ async def soc_report_csv(hours: int = Query(24, ge=1, le=720), _admin: dict = De
     return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
                              headers={"Content-Disposition": f"attachment; filename={filename}"})
 
-# --- Active Restrictions ---
+
+# ===========================================================================
+# REPORT & EXPORT CENTER ENDPOINTS (ADMIN)
+# ===========================================================================
+
+@app.get("/api/admin/reports/security")
+async def admin_report_security_overview(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    classification: str | None = Query(None),
+    severity: str | None = Query(None),
+    threat_type: str | None = Query(None),
+    user: str | None = Query(None),
+    action: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "classification": classification, "severity": severity,
+        "threat_type": threat_type, "user": user, "action": action,
+    }
+    return build_security_overview_report(filters)
+
+
+@app.get("/api/admin/reports/threats")
+async def admin_report_threat_intelligence(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    severity: str | None = Query(None),
+    threat_type: str | None = Query(None),
+    user: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "severity": severity, "threat_type": threat_type, "user": user,
+    }
+    return build_threat_intelligence_report(filters)
+
+
+@app.get("/api/admin/reports/users")
+async def admin_report_user_security(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    user: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to, "user": user,
+    }
+    return build_user_security_report(filters)
+
+
+@app.get("/api/admin/reports/audit")
+async def admin_report_audit_log(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    action: str | None = Query(None),
+    user: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "action": action, "user": user,
+    }
+    return build_audit_log_report(filters)
+
+
+@app.get("/api/admin/reports/incidents")
+async def admin_report_incidents(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    status: str | None = Query(None),
+    severity: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "status": status, "severity": severity,
+    }
+    return build_incidents_report(filters)
+
+
+@app.get("/api/admin/reports/activity")
+async def admin_report_chat_activity(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    user: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to, "user": user,
+    }
+    return build_chat_activity_report(filters)
+
+
+@app.get("/api/admin/reports/user-chats")
+async def admin_report_user_chats(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    user: str | None = Query(None),
+    classification: str | None = Query(None),
+    severity: str | None = Query(None),
+    threat_type: str | None = Query(None),
+    action: str | None = Query(None),
+    _admin: dict = Depends(admin_required),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "user": user, "classification": classification, "severity": severity,
+        "threat_type": threat_type, "action": action,
+    }
+    return build_user_chats_report(filters)
+
+
+@app.post("/api/admin/reports/pdf")
+async def admin_export_pdf(req: ReportExportRequest, admin: dict = Depends(admin_required)):
+    filters = req.model_dump()
+    rtype = req.report_type
+
+    if rtype == "security_overview":
+        data = build_security_overview_report(filters)
+    elif rtype == "threat_intelligence":
+        data = build_threat_intelligence_report(filters)
+    elif rtype == "user_security":
+        data = build_user_security_report(filters)
+    elif rtype == "audit_log":
+        data = build_audit_log_report(filters)
+    elif rtype == "incidents":
+        data = build_incidents_report(filters)
+    elif rtype == "chat_activity":
+        data = build_chat_activity_report(filters)
+    elif rtype == "user_chats":
+        data = build_user_chats_report(filters)
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid report type: {rtype}")
+
+    try:
+        pdf_bytes = generate_pdf(rtype, data, generated_by=admin["username"], filters=filters)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to generate PDF report.")
+
+    save_report_record(
+        generated_by=admin["username"],
+        role="admin",
+        report_type=rtype,
+        fmt="PDF",
+        date_from=data.get("date_from", ""),
+        date_to=data.get("date_to", ""),
+        filters=filters,
+        record_count=data.get("record_count", 0),
+        status="SUCCESS",
+    )
+    audit_log(admin["username"], "GENERATE_REPORT_PDF", rtype, f"Generated {rtype} PDF report ({data.get('record_count', 0)} records)")
+
+    filename = f"HoneyPrompt_{rtype.title().replace('_', '')}_Report_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.post("/api/admin/reports/excel")
+async def admin_export_excel(req: ReportExportRequest, admin: dict = Depends(admin_required)):
+    filters = req.model_dump()
+    rtype = req.report_type
+
+    if rtype == "security_overview":
+        data = build_security_overview_report(filters)
+    elif rtype == "threat_intelligence":
+        data = build_threat_intelligence_report(filters)
+    elif rtype == "user_security":
+        data = build_user_security_report(filters)
+    elif rtype == "audit_log":
+        data = build_audit_log_report(filters)
+    elif rtype == "incidents":
+        data = build_incidents_report(filters)
+    elif rtype == "chat_activity":
+        data = build_chat_activity_report(filters)
+    elif rtype == "user_chats":
+        data = build_user_chats_report(filters)
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid report type: {rtype}")
+
+    try:
+        xlsx_bytes = generate_excel(rtype, data, generated_by=admin["username"], filters=filters)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to generate Excel report.")
+
+    save_report_record(
+        generated_by=admin["username"],
+        role="admin",
+        report_type=rtype,
+        fmt="EXCEL",
+        date_from=data.get("date_from", ""),
+        date_to=data.get("date_to", ""),
+        filters=filters,
+        record_count=data.get("record_count", 0),
+        status="SUCCESS",
+    )
+    audit_log(admin["username"], "GENERATE_REPORT_EXCEL", rtype, f"Generated {rtype} Excel report ({data.get('record_count', 0)} records)")
+
+    filename = f"HoneyPrompt_{rtype.title().replace('_', '')}_Report_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+    return StreamingResponse(
+        io.BytesIO(xlsx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.post("/api/admin/reports/email")
+async def admin_email_report(req: EmailReportRequest, admin: dict = Depends(admin_required)):
+    if not req.recipient_email or "@" not in req.recipient_email:
+        raise HTTPException(status_code=400, detail="Invalid recipient email address.")
+
+    filters = req.model_dump()
+    rtype = req.report_type
+
+    try:
+        if rtype == "security_overview":
+            data = build_security_overview_report(filters)
+        elif rtype == "threat_intelligence":
+            data = build_threat_intelligence_report(filters)
+        elif rtype == "user_security":
+            data = build_user_security_report(filters)
+        elif rtype == "audit_log":
+            data = build_audit_log_report(filters)
+        elif rtype == "incidents":
+            data = build_incidents_report(filters)
+        elif rtype == "chat_activity":
+            data = build_chat_activity_report(filters)
+        elif rtype == "user_chats":
+            data = build_user_chats_report(filters)
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid report type: {rtype}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unable to generate report data: {e}")
+
+    fmt = (req.format or "PDF").upper()
+    try:
+        if fmt == "EXCEL":
+            attachment_bytes = generate_excel(rtype, data, generated_by=admin["username"], filters=filters)
+            filename = f"HoneyPrompt_{rtype.title().replace('_', '')}_Report_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+            content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        else:
+            attachment_bytes = generate_pdf(rtype, data, generated_by=admin["username"], filters=filters)
+            filename = f"HoneyPrompt_{rtype.title().replace('_', '')}_Report_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+            content_type = "application/pdf"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unable to generate report file: {e}")
+
+    try:
+        send_report_email(
+            to_email=req.recipient_email,
+            subject=req.subject or f"HoneyPrompt Sentinel Security Report — {rtype.replace('_', ' ').title()}",
+            message=req.message or f"Attached is your generated {fmt} security report for window: {data.get('date_from')} to {data.get('date_to')}.",
+            attachment_bytes=attachment_bytes,
+            filename=filename,
+            content_type=content_type,
+            cc_email=req.cc_email,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unable to send email: {e}")
+
+    save_report_record(
+        generated_by=admin["username"],
+        role="admin",
+        report_type=rtype,
+        fmt=f"EMAIL_{fmt}",
+        date_from=data.get("date_from", ""),
+        date_to=data.get("date_to", ""),
+        filters=filters,
+        record_count=data.get("record_count", 0),
+        status="SUCCESS",
+    )
+    audit_log(admin["username"], f"EMAIL_REPORT_{fmt}", rtype, f"Sent {rtype} report to {req.recipient_email}")
+
+    return {
+        "status": "success",
+        "message": f"Report generated and emailed successfully to {req.recipient_email}.",
+        "recipient": req.recipient_email,
+        "format": fmt,
+        "record_count": data.get("record_count", 0)
+    }
+
+
+@app.get("/api/admin/reports/history")
+async def admin_reports_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    admin: dict = Depends(admin_required),
+):
+    return get_report_history(admin["username"], role="admin", page=page, page_size=page_size)
+
+
+# ===========================================================================
+# REPORT & EXPORT CENTER ENDPOINTS (USER)
+# ===========================================================================
+
+@app.get("/api/user/reports/security")
+async def user_report_personal_security(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    current_user: dict = Depends(get_current_user_obj),
+):
+    filters = {"date_range": date_range, "date_from": date_from, "date_to": date_to}
+    return build_personal_security_report(current_user["username"], filters)
+
+
+@app.get("/api/user/reports/history")
+async def user_report_security_history(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    classification: str | None = Query(None),
+    severity: str | None = Query(None),
+    threat_type: str | None = Query(None),
+    current_user: dict = Depends(get_current_user_obj),
+):
+    filters = {
+        "date_range": date_range, "date_from": date_from, "date_to": date_to,
+        "classification": classification, "severity": severity, "threat_type": threat_type,
+    }
+    return build_user_security_history_report(current_user["username"], filters)
+
+
+@app.get("/api/user/reports/activity")
+async def user_report_chat_activity(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    current_user: dict = Depends(get_current_user_obj),
+):
+    filters = {"date_range": date_range, "date_from": date_from, "date_to": date_to}
+    return build_user_chat_activity_report(current_user["username"], filters)
+
+
+@app.get("/api/user/reports/alerts")
+async def user_report_alerts(
+    date_range: str = Query("30d"),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    severity: str | None = Query(None),
+    current_user: dict = Depends(get_current_user_obj),
+):
+    filters = {"date_range": date_range, "date_from": date_from, "date_to": date_to, "severity": severity}
+    return build_user_alerts_report(current_user["username"], filters)
+
+
+@app.post("/api/user/reports/pdf")
+async def user_export_pdf(req: ReportExportRequest, current_user: dict = Depends(get_current_user_obj)):
+    filters = req.model_dump()
+    rtype = req.report_type
+    username = current_user["username"]
+
+    if rtype == "personal_security":
+        data = build_personal_security_report(username, filters)
+    elif rtype == "security_history":
+        data = build_user_security_history_report(username, filters)
+    elif rtype == "my_chat_activity":
+        data = build_user_chat_activity_report(username, filters)
+    elif rtype == "security_alerts":
+        data = build_user_alerts_report(username, filters)
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid user report type: {rtype}")
+
+    try:
+        pdf_bytes = generate_pdf(rtype, data, generated_by=username, filters=filters)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to generate PDF report.")
+
+    save_report_record(
+        generated_by=username,
+        role="user",
+        report_type=rtype,
+        fmt="PDF",
+        date_from=data.get("date_from", ""),
+        date_to=data.get("date_to", ""),
+        filters=filters,
+        record_count=data.get("record_count", 0),
+        status="SUCCESS",
+    )
+
+    filename = f"HoneyPrompt_User_{rtype.title().replace('_', '')}_{datetime.now().strftime('%Y-%m-%d')}.pdf"
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.post("/api/user/reports/excel")
+async def user_export_excel(req: ReportExportRequest, current_user: dict = Depends(get_current_user_obj)):
+    filters = req.model_dump()
+    rtype = req.report_type
+    username = current_user["username"]
+
+    if rtype == "personal_security":
+        data = build_personal_security_report(username, filters)
+    elif rtype == "security_history":
+        data = build_user_security_history_report(username, filters)
+    elif rtype == "my_chat_activity":
+        data = build_user_chat_activity_report(username, filters)
+    elif rtype == "security_alerts":
+        data = build_user_alerts_report(username, filters)
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid user report type: {rtype}")
+
+    try:
+        xlsx_bytes = generate_excel(rtype, data, generated_by=username, filters=filters)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to generate Excel report.")
+
+    save_report_record(
+        generated_by=username,
+        role="user",
+        report_type=rtype,
+        fmt="EXCEL",
+        date_from=data.get("date_from", ""),
+        date_to=data.get("date_to", ""),
+        filters=filters,
+        record_count=data.get("record_count", 0),
+        status="SUCCESS",
+    )
+
+    filename = f"HoneyPrompt_User_{rtype.title().replace('_', '')}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+    return StreamingResponse(
+        io.BytesIO(xlsx_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/user/reports/generation-history")
+async def user_reports_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: dict = Depends(get_current_user_obj),
+):
+    return get_report_history(current_user["username"], role="user", page=page, page_size=page_size)
+
 @app.get("/api/soc/restrictions")
 async def soc_active_restrictions(_admin: dict = Depends(admin_required)):
     activity = _read_activity()
     users = _read_users()
     now = datetime.now()
     result = []
-    for key, state in activity.items():
+    for key, user in users.items():
+        state = activity.get(key, {})
         blocked_until = state.get("blocked_until")
+        is_chat_blocked = False
         if blocked_until:
             try:
-                if datetime.fromisoformat(blocked_until) > now:
-                    user = users.get(key, {})
-                    result.append({
-                        "username": user.get("username", key),
-                        "email": user.get("email", ""),
-                        "blocked_until": blocked_until,
-                        "blocked_at": state.get("blocked_at"),
-                        "block_reason": state.get("block_reason", ""),
-                        "blocked_by": state.get("blocked_by", "SENTINEL"),
-                        "block_source": state.get("block_source", "automatic"),
-                        "consecutive_count": state.get("consecutive_count", 0),
-                    })
+                is_chat_blocked = datetime.fromisoformat(blocked_until) > now
             except Exception:
-                pass
+                is_chat_blocked = False
+        is_acc_blocked = bool(user.get("is_blocked", False))
+        if is_chat_blocked or is_acc_blocked:
+            result.append({
+                "username": user.get("username", key),
+                "email": user.get("email", ""),
+                "blocked_until": blocked_until if is_chat_blocked else ("2099-12-31T23:59:59" if is_acc_blocked else None),
+                "blocked_at": state.get("blocked_at"),
+                "block_reason": state.get("block_reason", "Administrative restriction"),
+                "blocked_by": state.get("blocked_by", "SENTINEL"),
+                "block_source": state.get("block_source", "manual" if is_acc_blocked else "automatic"),
+                "consecutive_count": state.get("consecutive_count", 0),
+            })
     return result
 
 

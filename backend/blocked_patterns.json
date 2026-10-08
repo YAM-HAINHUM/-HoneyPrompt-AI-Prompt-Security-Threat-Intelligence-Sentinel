@@ -13,5 +13,20 @@
     "is_active": true,
     "created_by": "admin_01",
     "created_at": "2026-10-05T22:33:39.281956"
+  },
+  {
+    "id": "b76d0472-d0f3-4630-ae9a-3c3a008581a1",
+    "phrase": "hack a system",
+    "is_active": false,
+    "created_by": "admin_01",
+    "created_at": "2026-10-08T15:24:35.048852",
+    "updated_at": "2026-10-08T15:25:22.272041"
+  },
+  {
+    "id": "ee7a7fb2-a248-4a2c-a834-aa05e8bda053",
+    "phrase": "jaysmit chaudharai",
+    "is_active": true,
+    "created_by": "admin_01",
+    "created_at": "2026-10-08T15:25:19.064493"
   }
 ]

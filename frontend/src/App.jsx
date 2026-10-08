@@ -15,6 +15,7 @@ import UserHistoryPage from './UserHistoryPage';
 import ChatHistoryPage from './ChatHistoryPage';
 import UserAlertsPage from './UserAlertsPage';
 import UserProfilePage from './UserProfilePage';
+import UserReportsPage from './UserReportsPage';
 import LoadingState from './LoadingState';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
@@ -59,6 +60,8 @@ function ProtectedLayout() {
   const [seenAt, setSeenAt] = useState(() => Number(localStorage.getItem(`hp_alerts_seen_${user?.username || 'guest'}`) || 0));
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [legacyOpen, setLegacyOpen] = useState(false);
 
   useEffect(() => {
     const onPreferencesChanged = event => setUserPreferences(current => ({ ...current, ...event.detail }));
@@ -83,6 +86,13 @@ function ProtectedLayout() {
     return () => window.clearInterval(intervalId);
   }, [isAdmin, user, userPreferences.inAppAlerts]);
 
+  useEffect(() => {
+    const toolsPaths = ['/soc/model', '/soc/testing', '/soc/incidents', '/soc/policies', '/admin/patterns'];
+    const legacyPaths = ['/sentinel', '/threats', '/logs', '/analytics'];
+    if (toolsPaths.some(p => location.pathname.startsWith(p))) setToolsOpen(true);
+    if (legacyPaths.some(p => location.pathname.startsWith(p))) setLegacyOpen(true);
+  }, [location.pathname]);
+
   if (authLoading) return <LoadingState label="Verifying your secure session..." fullScreen />;
   if (!user) return <Navigate to="/login" replace />;
 
@@ -102,12 +112,12 @@ function ProtectedLayout() {
     '/': 'Secure Chat', '/dashboard': 'Dashboard', '/sentinel': 'Live Sentinel',
     '/threats': 'Threat Matrix', '/logs': 'Audit Logs', '/analytics': 'Analytics',
     '/settings': 'Settings', '/history': 'Security History', '/chat-history': 'Chat History',
-    '/alerts': 'Security Alerts', '/profile': 'Your Profile', '/admin/patterns': 'Security Rules',
+    '/alerts': 'Security Alerts', '/profile': 'Your Profile', '/reports': 'My Reports', '/admin/patterns': 'Security Rules',
     '/soc': 'Command Center', '/soc/alerts': 'Security Alerts', '/soc/threat-intel': 'Threat Intelligence',
     '/soc/user-risk': 'User Risk', '/soc/investigation': 'Threat Investigation',
     '/soc/audit': 'Audit Log', '/soc/restrictions': 'Active Restrictions',
     '/soc/model': 'Model Monitor', '/soc/testing': 'Security Testing',
-    '/soc/incidents': 'Incidents', '/soc/reports': 'Reports', '/soc/policies': 'Security Policies',
+    '/soc/incidents': 'Incidents', '/soc/reports': 'Reports & Exports', '/soc/policies': 'Security Policies',
   }[location.pathname] || 'Security Console';
   const visibleAlerts = isAdmin || userPreferences.inAppAlerts ? alerts : [];
   const unreadCount = isAdmin
@@ -152,27 +162,61 @@ function ProtectedLayout() {
           <NavLink to="/dashboard" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <LayoutDashboard size={17} /> Dashboard
           </NavLink>
+
           {isAdmin && <>
-            <div className="nav-section-label" style={{marginTop:8}}>SOC</div>
             <NavLink to="/soc" end onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Shield size={17} /> Command Center</NavLink>
             <NavLink to="/soc/alerts" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Bell size={17} /> Security Alerts</NavLink>
             <NavLink to="/soc/user-risk" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><User size={17} /> User Risk</NavLink>
-            <NavLink to="/soc/threat-intel" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Threat Intel</NavLink>
+            <NavLink to="/soc/threat-intel" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Threat Intelligence</NavLink>
             <NavLink to="/soc/investigation" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Hexagon size={17} /> Investigation</NavLink>
-            <NavLink to="/soc/audit" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Audit Log</NavLink>
+            <NavLink to="/soc/audit" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Audit Logs</NavLink>
             <NavLink to="/soc/restrictions" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Activity size={17} /> Restrictions</NavLink>
-            <NavLink to="/soc/model" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><SlidersHorizontal size={17} /> Model Monitor</NavLink>
-            <NavLink to="/soc/testing" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Shield size={17} /> Security Testing</NavLink>
-            <NavLink to="/soc/incidents" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><AlertTriangle size={17} /> Incidents</NavLink>
-            <NavLink to="/soc/reports" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Reports</NavLink>
-            <NavLink to="/soc/policies" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Settings size={17} /> Policies</NavLink>
-            <div className="nav-section-label" style={{marginTop:8}}>LEGACY</div>
-            <NavLink to="/sentinel" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Activity size={17} /> Live Sentinel</NavLink>
-            <NavLink to="/threats" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Hexagon size={17} /> Threat Matrix</NavLink>
-            <NavLink to="/logs" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Audit Logs</NavLink>
-            <NavLink to="/analytics" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><BarChart2 size={17} /> Analytics</NavLink>
-            <NavLink to="/admin/patterns" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><SlidersHorizontal size={17} /> Security Rules</NavLink>
+            <NavLink to="/soc/reports" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Reports</NavLink>
+
+            {/* Secondary / Admin Tools Submenu */}
+            <div className="nav-submenu">
+              <button
+                type="button"
+                className={`nav-submenu-toggle ${['/soc/model', '/soc/testing', '/soc/incidents', '/soc/policies', '/admin/patterns'].some(p => location.pathname.startsWith(p)) ? 'active-within' : ''}`}
+                onClick={() => setToolsOpen(!toolsOpen)}
+              >
+                <SlidersHorizontal size={17} />
+                <span>More / Security Tools</span>
+                <ChevronDown size={14} className={`submenu-arrow ${toolsOpen ? 'rotated' : ''}`} />
+              </button>
+              {toolsOpen && (
+                <div className="nav-submenu-items">
+                  <NavLink to="/soc/model" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Model Monitor</NavLink>
+                  <NavLink to="/soc/testing" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Security Testing</NavLink>
+                  <NavLink to="/soc/incidents" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Incidents</NavLink>
+                  <NavLink to="/soc/policies" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Policies</NavLink>
+                  <NavLink to="/admin/patterns" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Security Rules</NavLink>
+                </div>
+              )}
+            </div>
+
+            {/* Legacy Submenu */}
+            <div className="nav-submenu">
+              <button
+                type="button"
+                className={`nav-submenu-toggle ${['/sentinel', '/threats', '/logs', '/analytics'].some(p => location.pathname.startsWith(p)) ? 'active-within' : ''}`}
+                onClick={() => setLegacyOpen(!legacyOpen)}
+              >
+                <Activity size={17} />
+                <span>Legacy Tools</span>
+                <ChevronDown size={14} className={`submenu-arrow ${legacyOpen ? 'rotated' : ''}`} />
+              </button>
+              {legacyOpen && (
+                <div className="nav-submenu-items">
+                  <NavLink to="/sentinel" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Live Sentinel</NavLink>
+                  <NavLink to="/threats" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Threat Matrix</NavLink>
+                  <NavLink to="/logs" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Audit Logs (Legacy)</NavLink>
+                  <NavLink to="/analytics" onClick={closeMobileNav} className={({ isActive }) => `nav-item nav-subitem ${isActive ? 'active' : ''}`}>Analytics</NavLink>
+                </div>
+              )}
+            </div>
           </>}
+
           <NavLink to="/" end onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MessageSquare size={17} /> Secure Chat
           </NavLink>
@@ -180,6 +224,7 @@ function ProtectedLayout() {
             <NavLink to="/chat-history" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><MessageSquare size={17} /> Chat History</NavLink>
             <NavLink to="/history" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> Security History</NavLink>
             <NavLink to="/alerts" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><Bell size={17} /> Alerts{unreadCount > 0 && <span className="nav-count">{unreadCount > 9 ? '9+' : unreadCount}</span>}</NavLink>
+            <NavLink to="/reports" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><FileText size={17} /> My Reports</NavLink>
             <NavLink to="/profile" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}><User size={17} /> Profile</NavLink>
           </>}
           <NavLink to="/settings" onClick={closeMobileNav} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -254,6 +299,7 @@ function ProtectedLayout() {
             <Route path="/history" element={<UserHistoryPage />} />
             <Route path="/chat-history" element={<ChatHistoryPage />} />
             <Route path="/alerts" element={<UserAlertsPage />} />
+            <Route path="/reports" element={<UserReportsPage />} />
             <Route path="/profile" element={<UserProfilePage />} />
             <Route path="/admin/patterns" element={<AdminPatternsPage />} />
             <Route path="/soc" element={<SOCCommandCenter />} />

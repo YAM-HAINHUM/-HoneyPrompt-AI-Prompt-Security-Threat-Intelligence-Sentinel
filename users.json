@@ -1,0 +1,22 @@
+{
+  "admin_01": {
+    "username": "admin_01",
+    "full_name": "Admin User",
+    "email": "admin@honeyprompt.ai",
+    "password_hash": "404670db1d50742329ab13fb70cb7356335ce45488f99c766e01e78c6e0b0b53",
+    "role": "Admin",
+    "is_active": true,
+    "is_blocked": false,
+    "created_at": "2026-10-06T09:12:15.800084",
+    "last_login": null
+  },
+  "test_report_user": {
+    "username": "test_report_user",
+    "full_name": "Test Report User",
+    "email": "report_user@test.local",
+    "role": "User",
+    "is_active": true,
+    "is_blocked": false,
+    "created_at": "2026-10-05T00:00:00"
+  }
+}

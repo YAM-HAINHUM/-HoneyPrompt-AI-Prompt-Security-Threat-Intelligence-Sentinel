@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SocBadge, SevBadge, StatusBadge, SocPagination, SocNotice, fmtTime, fmtPct, SEV_COLOR } from './socUtils';
 
 const STATUSES = ['', 'NEW', 'INVESTIGATING', 'RESOLVED', 'DISMISSED'];
@@ -78,7 +79,7 @@ export default function SOCAlerts() {
       {/* Alert list */}
       <SocCard style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? (
-          <div className="hp-loading"><span>Loading alerts...</span></div>
+          <LoadingState label="Loading security alerts..." compact />
         ) : items.length === 0 ? (
           <p style={{ padding: 24, color: 'var(--text-secondary)', margin: 0 }}>No alerts match the current filters.</p>
         ) : items.map(a => (

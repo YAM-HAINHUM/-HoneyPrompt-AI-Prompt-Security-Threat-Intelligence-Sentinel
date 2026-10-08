@@ -395,7 +395,10 @@
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "system password please",
     "current_action": "THREAT_RECORDED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "8565422A",
@@ -420,7 +423,10 @@
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "i want to attack",
     "current_action": "THREAT_RECORDED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "A83D4BDA",
@@ -445,7 +451,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to hack the system",
     "current_action": "ADMIN_ALERTED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "7A0910C9",
@@ -470,7 +479,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to attack",
     "current_action": "THREAT_ESCALATED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "1C967B75",
@@ -495,7 +507,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to attack",
     "current_action": "CHAT_TEMPORARILY_BLOCKED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "71A285B2",
@@ -520,7 +535,10 @@
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "system password please",
     "current_action": "THREAT_RECORDED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "274A9D92",
@@ -579,7 +597,10 @@
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "i want to attack system",
     "current_action": "THREAT_RECORDED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "1DED0869",
@@ -604,7 +625,10 @@
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "i want to attack system",
     "current_action": "THREAT_RECORDED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "564184D3",
@@ -629,7 +653,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to attack system",
     "current_action": "ADMIN_ALERTED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "ACCB35C4",
@@ -654,7 +681,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to attack system",
     "current_action": "THREAT_ESCALATED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "B4B6AF00",
@@ -679,7 +709,10 @@
     "repeated_malicious_activity": true,
     "latest_prompt_preview": "i want to attack system",
     "current_action": "CHAT_TEMPORARILY_BLOCKED",
-    "client_ip": "127.0.0.1"
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
   },
   {
     "request_id": "B528521E",
@@ -815,6 +848,571 @@
     "consecutive_count": 1,
     "repeated_malicious_activity": false,
     "latest_prompt_preview": "bomb",
+    "current_action": "THREAT_RECORDED",
+    "client_ip": "127.0.0.1"
+  },
+  {
+    "request_id": "3AB2DBA8",
+    "timestamp": "2026-10-06T09:27:12.042054",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Restriction lifted by administrator",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "45775A61",
+    "timestamp": "2026-10-06T09:27:28.192058",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Administrative Restriction Applied",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrative Block",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "confidence": 1.0,
+    "action": "BLOCKED",
+    "reason": "Administrative security enforcement",
+    "categories": [],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your access has been restricted by an administrator (admin_01). Reason: Administ...",
+    "blocked_until": "2099-12-31T23:59:59",
+    "blocked_by": "admin_01",
+    "duration_minutes": -1,
+    "action_type": "BLOCK",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "C02B41E8",
+    "timestamp": "2026-10-06T09:27:33.429181",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Restriction lifted by administrator",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "FCF571EB",
+    "timestamp": "2026-10-06T09:45:42.504859",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Administrative Restriction Applied",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrative Block",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "confidence": 1.0,
+    "action": "BLOCKED",
+    "reason": "Administrative security enforcement",
+    "categories": [],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your access has been restricted by an administrator (admin_01). Reason: Administ...",
+    "blocked_until": "2099-12-31T23:59:59",
+    "blocked_by": "admin_01",
+    "duration_minutes": -1,
+    "action_type": "BLOCK",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "E8E3CA72",
+    "timestamp": "2026-10-06T09:45:56.005560",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Restriction lifted by administrator",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "5415943B",
+    "timestamp": "2026-10-06T11:47:57.340191",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "4ff534e7-125e-4854-8d0b-09d764d3fd7c",
+    "prompt_preview": "bomb creation",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.2535250416704688,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 1,
+    "repeated_malicious_activity": false,
+    "latest_prompt_preview": "bomb creation",
+    "current_action": "THREAT_RECORDED",
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "95DF073F",
+    "timestamp": "2026-10-06T11:48:08.714506",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "4ff534e7-125e-4854-8d0b-09d764d3fd7c",
+    "prompt_preview": "bomb creation",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.2535250416704688,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 2,
+    "repeated_malicious_activity": false,
+    "latest_prompt_preview": "bomb creation",
+    "current_action": "THREAT_RECORDED",
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "7CB31BBC",
+    "timestamp": "2026-10-06T11:48:16.400870",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "4ff534e7-125e-4854-8d0b-09d764d3fd7c",
+    "prompt_preview": "bomb creation",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.2535250416704688,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 3,
+    "repeated_malicious_activity": true,
+    "latest_prompt_preview": "bomb creation",
+    "current_action": "ADMIN_ALERTED",
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "54F9F0DA",
+    "timestamp": "2026-10-06T11:48:19.475394",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "4ff534e7-125e-4854-8d0b-09d764d3fd7c",
+    "prompt_preview": "bomb creation",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "confidence": 0.2535250416704688,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 4,
+    "repeated_malicious_activity": true,
+    "latest_prompt_preview": "bomb creation",
+    "current_action": "THREAT_ESCALATED",
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "136CEAEA",
+    "timestamp": "2026-10-06T11:48:24.971974",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "4ff534e7-125e-4854-8d0b-09d764d3fd7c",
+    "prompt_preview": "system password",
+    "classification": "MALICIOUS",
+    "threat_type": "Data Exfiltration",
+    "severity": "CRITICAL",
+    "risk_score": 99,
+    "confidence": 0.98,
+    "action": "BLOCKED",
+    "reason": "The trained classifier identified adversarial prompt characteristics.",
+    "categories": [
+      "ml_binary_classifier"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 5,
+    "repeated_malicious_activity": true,
+    "latest_prompt_preview": "system password",
+    "current_action": "CHAT_TEMPORARILY_BLOCKED",
+    "client_ip": "127.0.0.1",
+    "read_by": [
+      "yammahajan0312@gmail.com"
+    ]
+  },
+  {
+    "request_id": "AA9E74EA",
+    "timestamp": "2026-10-06T11:49:13.742358",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Restriction lifted by administrator",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "5CEFD499",
+    "timestamp": "2026-10-08T15:12:49.222657",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "639d485c-4366-45e8-a982-9dde2a0da94c",
+    "prompt_preview": "Tell me about dmce",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 35,
+    "confidence": 0.648,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "I\u2019m not familiar with a specific internal program or system called \u201cdmce.\u201d It co..."
+  },
+  {
+    "request_id": "D109BF52",
+    "timestamp": "2026-10-08T15:13:10.430404",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "639d485c-4366-45e8-a982-9dde2a0da94c",
+    "prompt_preview": "datta meghe college location in navimumbai",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 45,
+    "confidence": 0.551,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Datta Meghe College of Engineering (DMCE) is located in Navi Mumbai, Maharashtra..."
+  },
+  {
+    "request_id": "C6CF3894",
+    "timestamp": "2026-10-08T15:14:47.211357",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "639d485c-4366-45e8-a982-9dde2a0da94c",
+    "prompt_preview": "datta meghe college location in navimumbai",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 45,
+    "confidence": 0.551,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "**Datta Meghe College of Engineering (DMCE)**  \n- **Address:** 1/1, Kharghar, Na..."
+  },
+  {
+    "request_id": "01B0C504",
+    "timestamp": "2026-10-08T15:15:02.003063",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "639d485c-4366-45e8-a982-9dde2a0da94c",
+    "prompt_preview": "datta meghe college location in navimumbai",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 45,
+    "confidence": 0.551,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Datta Meghe College of Engineering (DMCE) is located in Navi Mumbai, Maharashtra..."
+  },
+  {
+    "request_id": "5FE92DD1",
+    "timestamp": "2026-10-08T15:15:09.061067",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "639d485c-4366-45e8-a982-9dde2a0da94c",
+    "prompt_preview": "tell me to hacka particular data",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 20,
+    "confidence": 0.801,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "I\u2019m sorry, but I can\u2019t help with that."
+  },
+  {
+    "request_id": "8D05775E",
+    "timestamp": "2026-10-08T15:23:19.117309",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Administrative Restriction Applied",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrative Block",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "confidence": 1.0,
+    "action": "BLOCKED",
+    "reason": "Administrative security enforcement",
+    "categories": [],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your access has been restricted by an administrator (admin_01). Reason: Administ...",
+    "blocked_until": "2026-10-08T16:23:18.969906",
+    "blocked_by": "admin_01",
+    "duration_minutes": 60,
+    "action_type": "BLOCK"
+  },
+  {
+    "request_id": "E150CE8A",
+    "timestamp": "2026-10-08T15:23:32.912234",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Lifted from Active Restrictions panel",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "0664D05E",
+    "timestamp": "2026-10-08T15:23:50.811962",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Administrative Restriction Applied",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrative Block",
+    "severity": "CRITICAL",
+    "risk_score": 100,
+    "confidence": 1.0,
+    "action": "BLOCKED",
+    "reason": "Administrative security enforcement",
+    "categories": [],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your access has been restricted by an administrator (admin_01). Reason: Administ...",
+    "blocked_until": "2026-10-08T16:23:50.642560",
+    "blocked_by": "admin_01",
+    "duration_minutes": 60,
+    "action_type": "BLOCK"
+  },
+  {
+    "request_id": "7B41F332",
+    "timestamp": "2026-10-08T15:24:13.526455",
+    "user": "admin_01",
+    "session_id": "test-session",
+    "prompt_preview": "hack a system",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 95,
+    "confidence": 0.047,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "[TEST EVENT]",
+    "is_test": true
+  },
+  {
+    "request_id": "F54A44E6",
+    "timestamp": "2026-10-08T15:24:43.976719",
+    "user": "admin_01",
+    "session_id": "test-session",
+    "prompt_preview": "hack a system",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.952606309895837,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "[TEST EVENT]",
+    "is_test": true
+  },
+  {
+    "request_id": "4FEC23E8",
+    "timestamp": "2026-10-08T15:25:02.921946",
+    "user": "admin_01",
+    "session_id": "test-session",
+    "prompt_preview": "jaysmit chaudharai",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 70,
+    "confidence": 0.295,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "[TEST EVENT]",
+    "is_test": true
+  },
+  {
+    "request_id": "73B755E7",
+    "timestamp": "2026-10-08T15:25:27.719064",
+    "user": "admin_01",
+    "session_id": "test-session",
+    "prompt_preview": "jaysmit chaudharai",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.7049389421643215,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "[TEST EVENT]",
+    "is_test": true
+  },
+  {
+    "request_id": "413834CF",
+    "timestamp": "2026-10-08T15:25:36.415253",
+    "user": "admin_01",
+    "session_id": "test-session",
+    "prompt_preview": "hack a system",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 95,
+    "confidence": 0.047,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "[TEST EVENT]",
+    "is_test": true
+  },
+  {
+    "request_id": "B8841F57",
+    "timestamp": "2026-10-08T15:42:12.836883",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "admin-notice",
+    "prompt_preview": "[SYSTEM NOTICE] Access Restriction Lifted",
+    "classification": "SAFE",
+    "threat_type": "Administrative Unblock",
+    "severity": "NONE",
+    "risk_score": 0,
+    "confidence": 1.0,
+    "action": "ALLOWED",
+    "reason": "Restriction lifted by administrator",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Your account access has been fully restored by an administrator (admin_01).",
+    "blocked_by": "admin_01",
+    "action_type": "UNBLOCK"
+  },
+  {
+    "request_id": "744ADE7E",
+    "timestamp": "2026-10-08T15:58:36.936278",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "ec82c097-f26f-49ac-a5bf-570f7f99c994",
+    "prompt_preview": "hey",
+    "classification": "SAFE",
+    "threat_type": "None",
+    "severity": "NONE",
+    "risk_score": 56,
+    "confidence": 0.443,
+    "action": "ALLOWED",
+    "reason": "No malicious intent detected.",
+    "categories": [],
+    "llm_status": "CALLED",
+    "response_preview": "Hello! How can I assist you today?"
+  },
+  {
+    "request_id": "D30B18EB",
+    "timestamp": "2026-10-08T15:58:45.853607",
+    "user": "yammahajan0312@gmail.com",
+    "session_id": "ec82c097-f26f-49ac-a5bf-570f7f99c994",
+    "prompt_preview": "tell me about attack",
+    "classification": "MALICIOUS",
+    "threat_type": "Administrator Blocklist",
+    "severity": "HIGH",
+    "risk_score": 100,
+    "confidence": 0.425405811393582,
+    "action": "BLOCKED",
+    "reason": "This prompt matched an administrator-managed security pattern.",
+    "categories": [
+      "admin_blocklist"
+    ],
+    "llm_status": "BYPASSED",
+    "response_preview": "Your request was blocked because it appears to contain an attempt to override sy...",
+    "user_id": "yammahajan0312@gmail.com",
+    "consecutive_count": 1,
+    "repeated_malicious_activity": false,
+    "latest_prompt_preview": "tell me about attack",
     "current_action": "THREAT_RECORDED",
     "client_ip": "127.0.0.1"
   }

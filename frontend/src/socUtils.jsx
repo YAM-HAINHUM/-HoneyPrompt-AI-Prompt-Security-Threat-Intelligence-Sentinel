@@ -1,6 +1,7 @@
 // Shared SOC utilities
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 
 export const API = 'http://127.0.0.1:8000';
 
@@ -106,7 +107,7 @@ export function StatusBadge({ status }) {
 }
 
 export function SocTable({ cols, rows, emptyMsg = 'No data', loading }) {
-  if (loading) return <div className="hp-loading hp-loading-compact"><span>Loading...</span></div>;
+  if (loading) return <LoadingState label="Loading data..." compact />;
   return (
     <div style={{ overflowX: 'auto' }}>
       <table className="hp-table">

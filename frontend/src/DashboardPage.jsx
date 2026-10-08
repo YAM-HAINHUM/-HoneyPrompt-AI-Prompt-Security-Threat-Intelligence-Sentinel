@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AlertTriangle, ShieldCheck, ShieldX, Activity, Shield, Eye, Users, UserCheck, ShieldAlert, Check, ArrowUpRight } from 'lucide-react';
 import { useAuth } from './AuthContext';
@@ -161,11 +162,11 @@ export default function DashboardPage() {
               ['Audit Logs', '/soc/audit', 'Immutable admin audit trail'],
               ['Security Testing', '/soc/testing', 'Test prompts safely'],
             ].map(([label, href, desc]) => (
-              <a key={href} href={href} className="dash-quicklink card">
+              <Link key={href} to={href} className="dash-quicklink card">
                 <strong>{label}</strong>
                 <span>{desc}</span>
                 <ArrowUpRight size={14} className="dash-quicklink-arrow" />
-              </a>
+              </Link>
             ))}
           </div>
         </>
@@ -245,13 +246,13 @@ export default function DashboardPage() {
             {[
               ['Full Prompt History', '/history', 'Search & filter all your prompts'],
               ['Security Alerts', '/alerts', 'View all your security alerts'],
-              ['Chat', '/chat', 'Start a new secure conversation'],
+              ['Chat', '/', 'Start a new secure conversation'],
             ].map(([label, href, desc]) => (
-              <a key={href} href={href} className="dash-quicklink card">
+              <Link key={href} to={href} className="dash-quicklink card">
                 <strong>{label}</strong>
                 <span>{desc}</span>
                 <ArrowUpRight size={14} className="dash-quicklink-arrow" />
-              </a>
+              </Link>
             ))}
           </div>
         </>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SevBadge, ClfBadge, SocNotice, fmtPct } from './socUtils';
 
 const SAMPLES = [
@@ -68,6 +69,7 @@ export default function SOCSecurityTesting() {
           </button>
           <button className="btn-secondary" onClick={() => { setPrompt(''); setResult(null); }}>Clear</button>
         </div>
+        {loading && <div style={{ marginTop: 14 }}><LoadingState label="HoneyPrompt is analyzing test prompt security..." compact /></div>}
       </SocCard>
 
       {/* Sample prompts */}

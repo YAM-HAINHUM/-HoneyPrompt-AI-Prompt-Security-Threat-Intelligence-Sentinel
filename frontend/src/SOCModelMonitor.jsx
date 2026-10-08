@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct } from './socUtils';
 
 export default function SOCModelMonitor() {
@@ -14,7 +15,7 @@ export default function SOCModelMonitor() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="hp-loading"><span>Loading model info...</span></div>;
+  if (loading) return <LoadingState label="Loading AI model telemetry..." fullScreen={false} />;
 
   const warn = data?.recall != null && data.recall < 0.85;
   const matrix = data?.confusion_matrix;

@@ -277,6 +277,23 @@ THREAT_RULES = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# EDUCATIONAL / DEFENSIVE CONTEXT SIGNALS
+# If these appear alongside sensitive words, reduce false positives.
+# ---------------------------------------------------------------------------
+_EDUCATIONAL_CONTEXT_PATTERNS = [
+    r"\b(?:how\s+(?:does|do|can\s+i\s+learn|can\s+i\s+study)|what\s+is|explain|understand|learn\s+about|study|research|course|tutorial|book|article|paper|thesis|academic|university|college|class|lecture|exam|quiz|homework|assignment|project|report|essay|presentation|demo|example|sample|practice|exercise|lab|workshop|conference|seminar|webinar|podcast|video|blog|documentation|wiki|faq|guide|overview|introduction|basics|fundamentals|concept|theory|history|background|context|definition|meaning|difference\s+between|compare|contrast|pros\s+and\s+cons|advantages|disadvantages|use\s+case|real.world|scenario|case\s+study)\b",
+    r"\b(?:cybersecurity|information\s+security|infosec|penetration\s+testing|pen\s+test|ethical\s+hacking|bug\s+bounty|ctf|capture\s+the\s+flag|red\s+team|blue\s+team|purple\s+team|security\s+research|vulnerability\s+research|threat\s+modeling|risk\s+assessment|security\s+audit|compliance|nist|owasp|mitre|att&ck|cve|cwe|cvss)\b",
+    r"\b(?:defend|protect|prevent|mitigate|detect|monitor|analyze|investigate|respond\s+to|patch|fix|remediate|harden|secure|safeguard|audit|review|assess|test|scan|probe|identify|discover|report|disclose|responsible\s+disclosure)\b",
+    r"\b(?:for\s+(?:educational|learning|research|academic|study|training|awareness|demonstration|testing|practice|fun|a\s+class|a\s+course|a\s+project|a\s+report|a\s+paper|a\s+presentation|a\s+demo|a\s+ctf|a\s+lab|a\s+workshop|a\s+seminar|a\s+conference|a\s+book|a\s+tutorial|a\s+guide|a\s+blog|a\s+video|a\s+podcast|a\s+article|a\s+thesis|a\s+assignment|a\s+homework|a\s+exam|a\s+quiz|a\s+exercise|a\s+scenario|a\s+case\s+study|a\s+use\s+case|a\s+example|a\s+sample|a\s+overview|a\s+introduction|a\s+background|a\s+context|a\s+definition|a\s+concept|a\s+theory|a\s+history|a\s+comparison|a\s+contrast|a\s+analysis|a\s+review|a\s+assessment|a\s+audit|a\s+test|a\s+scan|a\s+probe|a\s+identification|a\s+discovery|a\s+report|a\s+disclosure))\b",
+]
+
+
+def _is_educational_context(text_lower: str) -> bool:
+    """Return True if the text contains clear educational/defensive/research signals."""
+    return any(re.search(p, text_lower) for p in _EDUCATIONAL_CONTEXT_PATTERNS)
+
+
 # Semantic intent matching requires both an action and a sensitive target. This
 # catches paraphrases without treating an isolated word such as "password" as
 # malicious.
@@ -410,6 +427,7 @@ def _match_semantic_intents(text_lower: str) -> list:
     """Match combinations of a request intent and a sensitive target."""
     matched = []
     for rule in SEMANTIC_INTENT_RULES:
+        # Check explicit exclude patterns first
         excluded = rule.get("exclude") and any(re.search(pattern, text_lower) for pattern in rule["exclude"])
         if excluded:
             if rule["id"] == "credential_extraction":
@@ -420,6 +438,11 @@ def _match_semantic_intents(text_lower: str) -> list:
                     continue
             else:
                 continue
+
+        # For harmful_attack_request: skip if educational/defensive context is present
+        if rule["id"] == "harmful_attack_request" and _is_educational_context(text_lower):
+            continue
+
         intent_match = any(re.search(pattern, text_lower) for pattern in rule["intent"])
         target_match = any(re.search(pattern, text_lower) for pattern in rule["target"])
         destination_match = not rule.get("destination") or any(
@@ -482,6 +505,20 @@ def analyze_prompt(text: str) -> dict:
     # Malicious intent must take precedence over educational/benign wording.
     malicious_matches = _match_rules(text_lower, THREAT_RULES)
     malicious_matches.extend(_match_semantic_intents(text_lower))
+
+    # For rules that can fire on educational/security-research context, apply
+    # the educational context filter — but only for lower-risk rules.
+    # High-severity rules (jailbreak, prompt_injection, system_prompt_extraction,
+    # honeypot triggers) are never suppressed by educational context.
+    NON_SUPPRESSIBLE = {"compliance_trap", "data_trap", "jailbreak", "prompt_injection",
+                        "system_prompt_extraction", "role_manipulation", "privilege_escalation",
+                        "obfuscated_payload", "credential_extraction", "data_exfiltration"}
+    if malicious_matches and _is_educational_context(text_lower):
+        malicious_matches = [
+            m for m in malicious_matches
+            if m.get("id") in NON_SUPPRESSIBLE or m.get("risk", 0) >= 85
+        ]
+
     if malicious_matches:
         # Pick highest-risk match
         best = max(malicious_matches, key=lambda r: r["risk"])

@@ -11,3 +11,5 @@ datasets>=2.19
 scipy>=1.13
 numpy>=1.26
 joblib
+reportlab>=4.0
+openpyxl>=3.1

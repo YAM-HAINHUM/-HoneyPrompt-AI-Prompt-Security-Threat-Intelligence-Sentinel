@@ -1,0 +1,432 @@
+[
+  {
+    "audit_id": "F74F7D10-5A1",
+    "timestamp": "2026-10-06T09:12:16.105205",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "security_overview",
+    "reason": "Generated security_overview PDF report (0 records)"
+  },
+  {
+    "audit_id": "956634F2-A53",
+    "timestamp": "2026-10-06T09:12:16.658630",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "security_overview",
+    "reason": "Generated security_overview Excel report (0 records)"
+  },
+  {
+    "audit_id": "22F7FCAF-1A4",
+    "timestamp": "2026-10-06T09:12:16.720897",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence PDF report (0 records)"
+  },
+  {
+    "audit_id": "984D46B3-A88",
+    "timestamp": "2026-10-06T09:12:16.814836",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence Excel report (0 records)"
+  },
+  {
+    "audit_id": "5B641F58-6F3",
+    "timestamp": "2026-10-06T09:12:16.867020",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "user_security",
+    "reason": "Generated user_security PDF report (1 records)"
+  },
+  {
+    "audit_id": "BDE4DBBB-40B",
+    "timestamp": "2026-10-06T09:12:16.991802",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "user_security",
+    "reason": "Generated user_security Excel report (1 records)"
+  },
+  {
+    "audit_id": "BACE4353-EC1",
+    "timestamp": "2026-10-06T09:12:17.100959",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "audit_log",
+    "reason": "Generated audit_log PDF report (6 records)"
+  },
+  {
+    "audit_id": "97E46D74-D53",
+    "timestamp": "2026-10-06T09:12:17.257491",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "audit_log",
+    "reason": "Generated audit_log Excel report (7 records)"
+  },
+  {
+    "audit_id": "69C9DCB5-A6E",
+    "timestamp": "2026-10-06T09:12:17.319793",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "incidents",
+    "reason": "Generated incidents PDF report (0 records)"
+  },
+  {
+    "audit_id": "017BB256-602",
+    "timestamp": "2026-10-06T09:12:17.493372",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "incidents",
+    "reason": "Generated incidents Excel report (0 records)"
+  },
+  {
+    "audit_id": "7F77F29E-9A8",
+    "timestamp": "2026-10-06T09:12:17.611299",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity PDF report (0 records)"
+  },
+  {
+    "audit_id": "8E69FB16-0D9",
+    "timestamp": "2026-10-06T09:12:17.843499",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity Excel report (0 records)"
+  },
+  {
+    "audit_id": "2AA51FE0-609",
+    "timestamp": "2026-10-06T09:17:01.365310",
+    "admin": "admin",
+    "action": "USER_BLOCKED",
+    "target": "analyst",
+    "reason": "Manual account review",
+    "duration_minutes": 1,
+    "blocked_until": "2026-10-06T09:18:01.364819"
+  },
+  {
+    "audit_id": "C5618929-B37",
+    "timestamp": "2026-10-06T09:17:20.697878",
+    "admin": "admin",
+    "action": "USER_BLOCKED",
+    "target": "analyst",
+    "reason": "Manual account review",
+    "duration_minutes": 1,
+    "blocked_until": "2026-10-06T09:18:20.696721"
+  },
+  {
+    "audit_id": "05CA1EFE-BFE",
+    "timestamp": "2026-10-06T09:17:20.784549",
+    "admin": "admin",
+    "action": "USER_UNBLOCKED",
+    "target": "analyst",
+    "reason": "Restriction lifted by an administrator."
+  },
+  {
+    "audit_id": "7177A80C-95D",
+    "timestamp": "2026-10-06T09:17:34.220451",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "security_overview",
+    "reason": "Generated security_overview PDF report (0 records)"
+  },
+  {
+    "audit_id": "F1A3641A-48E",
+    "timestamp": "2026-10-06T09:17:34.786853",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "security_overview",
+    "reason": "Generated security_overview Excel report (0 records)"
+  },
+  {
+    "audit_id": "EC227519-0C9",
+    "timestamp": "2026-10-06T09:17:34.852433",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence PDF report (0 records)"
+  },
+  {
+    "audit_id": "DBD7B400-C79",
+    "timestamp": "2026-10-06T09:17:34.938273",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence Excel report (0 records)"
+  },
+  {
+    "audit_id": "EBE524CE-DD0",
+    "timestamp": "2026-10-06T09:17:34.976273",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "user_security",
+    "reason": "Generated user_security PDF report (1 records)"
+  },
+  {
+    "audit_id": "436686D9-850",
+    "timestamp": "2026-10-06T09:17:35.054102",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "user_security",
+    "reason": "Generated user_security Excel report (1 records)"
+  },
+  {
+    "audit_id": "C5428348-BD1",
+    "timestamp": "2026-10-06T09:17:35.141809",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "audit_log",
+    "reason": "Generated audit_log PDF report (21 records)"
+  },
+  {
+    "audit_id": "0CCBB096-EF2",
+    "timestamp": "2026-10-06T09:17:35.314724",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "audit_log",
+    "reason": "Generated audit_log Excel report (22 records)"
+  },
+  {
+    "audit_id": "E7D70E9E-F2C",
+    "timestamp": "2026-10-06T09:17:35.367469",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "incidents",
+    "reason": "Generated incidents PDF report (0 records)"
+  },
+  {
+    "audit_id": "B93243CC-4BD",
+    "timestamp": "2026-10-06T09:17:35.534217",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "incidents",
+    "reason": "Generated incidents Excel report (0 records)"
+  },
+  {
+    "audit_id": "2F1A627C-5E1",
+    "timestamp": "2026-10-06T09:17:35.616794",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity PDF report (0 records)"
+  },
+  {
+    "audit_id": "752291C8-CC9",
+    "timestamp": "2026-10-06T09:17:35.772317",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity Excel report (0 records)"
+  },
+  {
+    "audit_id": "95F3D349-5EB",
+    "timestamp": "2026-10-06T09:18:01.373801",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "security_overview",
+    "reason": "Generated security_overview PDF report (0 records)"
+  },
+  {
+    "audit_id": "F68508A6-5FF",
+    "timestamp": "2026-10-06T09:18:01.858608",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "security_overview",
+    "reason": "Generated security_overview Excel report (0 records)"
+  },
+  {
+    "audit_id": "333A7AA4-50F",
+    "timestamp": "2026-10-06T09:18:01.940897",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence PDF report (0 records)"
+  },
+  {
+    "audit_id": "943BF5D1-DE2",
+    "timestamp": "2026-10-06T09:18:02.078648",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence Excel report (0 records)"
+  },
+  {
+    "audit_id": "921131E4-8E4",
+    "timestamp": "2026-10-06T09:18:02.147736",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "user_security",
+    "reason": "Generated user_security PDF report (2 records)"
+  },
+  {
+    "audit_id": "EC853162-F54",
+    "timestamp": "2026-10-06T09:18:02.317510",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "user_security",
+    "reason": "Generated user_security Excel report (2 records)"
+  },
+  {
+    "audit_id": "33E7A833-850",
+    "timestamp": "2026-10-06T09:18:02.422081",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "audit_log",
+    "reason": "Generated audit_log PDF report (33 records)"
+  },
+  {
+    "audit_id": "316FEF6E-202",
+    "timestamp": "2026-10-06T09:18:02.517221",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "audit_log",
+    "reason": "Generated audit_log Excel report (34 records)"
+  },
+  {
+    "audit_id": "DC6FE02E-F7C",
+    "timestamp": "2026-10-06T09:18:02.557573",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "incidents",
+    "reason": "Generated incidents PDF report (0 records)"
+  },
+  {
+    "audit_id": "414338BD-F13",
+    "timestamp": "2026-10-06T09:18:02.673358",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "incidents",
+    "reason": "Generated incidents Excel report (0 records)"
+  },
+  {
+    "audit_id": "DCAA1594-D2E",
+    "timestamp": "2026-10-06T09:18:02.722137",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity PDF report (0 records)"
+  },
+  {
+    "audit_id": "8682F6C1-B0D",
+    "timestamp": "2026-10-06T09:18:02.807639",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity Excel report (0 records)"
+  },
+  {
+    "audit_id": "92FDF971-C3A",
+    "timestamp": "2026-10-06T09:24:11.882958",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "security_overview",
+    "reason": "Generated security_overview PDF report (0 records)"
+  },
+  {
+    "audit_id": "B25912A3-2D0",
+    "timestamp": "2026-10-06T09:24:12.227402",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "security_overview",
+    "reason": "Generated security_overview Excel report (0 records)"
+  },
+  {
+    "audit_id": "CFB96157-5DB",
+    "timestamp": "2026-10-06T09:24:12.287579",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence PDF report (0 records)"
+  },
+  {
+    "audit_id": "F8761BED-E6E",
+    "timestamp": "2026-10-06T09:24:12.360702",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "threat_intelligence",
+    "reason": "Generated threat_intelligence Excel report (0 records)"
+  },
+  {
+    "audit_id": "BB20720B-B5B",
+    "timestamp": "2026-10-06T09:24:12.420763",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "user_security",
+    "reason": "Generated user_security PDF report (2 records)"
+  },
+  {
+    "audit_id": "91700271-BBB",
+    "timestamp": "2026-10-06T09:24:12.536436",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "user_security",
+    "reason": "Generated user_security Excel report (2 records)"
+  },
+  {
+    "audit_id": "618BDA56-48A",
+    "timestamp": "2026-10-06T09:24:12.635420",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "audit_log",
+    "reason": "Generated audit_log PDF report (45 records)"
+  },
+  {
+    "audit_id": "68F28131-4BF",
+    "timestamp": "2026-10-06T09:24:12.821014",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "audit_log",
+    "reason": "Generated audit_log Excel report (46 records)"
+  },
+  {
+    "audit_id": "67DA46EF-164",
+    "timestamp": "2026-10-06T09:24:12.873284",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "incidents",
+    "reason": "Generated incidents PDF report (0 records)"
+  },
+  {
+    "audit_id": "0CC7D0F4-7EC",
+    "timestamp": "2026-10-06T09:24:12.955975",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "incidents",
+    "reason": "Generated incidents Excel report (0 records)"
+  },
+  {
+    "audit_id": "C86F55B3-E84",
+    "timestamp": "2026-10-06T09:24:13.008024",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_PDF",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity PDF report (0 records)"
+  },
+  {
+    "audit_id": "41D030A6-536",
+    "timestamp": "2026-10-06T09:24:13.100533",
+    "admin": "admin_01",
+    "action": "GENERATE_REPORT_EXCEL",
+    "target": "chat_activity",
+    "reason": "Generated chat_activity Excel report (0 records)"
+  },
+  {
+    "audit_id": "7279FDAD-989",
+    "timestamp": "2026-10-06T09:24:23.337872",
+    "admin": "admin",
+    "action": "USER_BLOCKED",
+    "target": "analyst",
+    "reason": "Manual account review",
+    "duration_minutes": 1,
+    "blocked_until": "2026-10-06T09:25:23.337322"
+  },
+  {
+    "audit_id": "21CF61CB-248",
+    "timestamp": "2026-10-06T09:24:23.375437",
+    "admin": "admin",
+    "action": "USER_UNBLOCKED",
+    "target": "analyst",
+    "reason": "Restriction lifted by an administrator."
+  }
+]

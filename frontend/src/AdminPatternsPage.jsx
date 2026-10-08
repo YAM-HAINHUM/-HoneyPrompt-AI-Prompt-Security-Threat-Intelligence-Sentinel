@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Plus, ShieldAlert, ToggleLeft, ToggleRight } from 'lucide-react';
+import LoadingState from './LoadingState';
 
 export default function AdminPatternsPage() {
   const [patterns, setPatterns] = useState([]);
@@ -60,7 +61,7 @@ export default function AdminPatternsPage() {
 
       <section className="card rule-list" aria-label="Managed prompt rules">
         <div className="rule-list-heading"><h2>Managed phrases</h2><span>{patterns.filter(pattern => pattern.is_active).length} active</span></div>
-        {loading ? <p className="empty-state">Loading rules...</p> : patterns.length === 0 ? <p className="empty-state">No administrator-managed phrases yet.</p> : patterns.map(pattern => (
+        {loading ? <LoadingState label="Loading security rules..." compact /> : patterns.length === 0 ? <p className="empty-state">No administrator-managed phrases yet.</p> : patterns.map(pattern => (
           <div className="rule-row" key={pattern.id}>
             <div><strong>{pattern.phrase}</strong><span>Added by {pattern.created_by} · {new Date(pattern.created_at).toLocaleString()}</span></div>
             <button type="button" className={`rule-toggle${pattern.is_active ? ' enabled' : ''}`} onClick={() => togglePattern(pattern)} aria-label={`${pattern.is_active ? 'Disable' : 'Enable'} ${pattern.phrase}`}>

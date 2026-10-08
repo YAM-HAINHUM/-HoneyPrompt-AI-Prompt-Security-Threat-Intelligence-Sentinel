@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SevBadge, ClfBadge, SocNotice, SocPagination, fmtTime, fmtPct } from './socUtils';
 
 export default function SOCThreatInvestigation() {
@@ -57,7 +58,7 @@ export default function SOCThreatInvestigation() {
       </SocCard>
 
       <SocCard style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? <div className="hp-loading"><span>Loading events...</span></div>
+        {loading ? <LoadingState label="Loading security event logs..." compact />
           : logs.length === 0 ? <p style={{ padding: 24, color: 'var(--text-secondary)', margin: 0 }}>No events found.</p>
           : logs.map(l => (
             <div key={l.request_id} style={{ borderBottom: '1px solid var(--border-color)' }}>

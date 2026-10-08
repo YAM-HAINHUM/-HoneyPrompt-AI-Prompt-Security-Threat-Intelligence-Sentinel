@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct, SEV_COLOR } from './socUtils';
 
 const RANGES = [{ label: '24H', hours: 24 }, { label: '7D', hours: 168 }, { label: '30D', hours: 720 }];
@@ -45,7 +46,7 @@ export default function SOCThreatIntelligence() {
       <SocNotice msg={notice} onDismiss={() => setNotice('')} type="error" />
 
       {loading ? (
-        <div className="hp-loading"><span>Loading threat intelligence...</span></div>
+        <LoadingState label="Loading threat intelligence data..." compact />
       ) : <>
         {/* Summary stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>

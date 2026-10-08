@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SevBadge, StatusBadge, SocNotice, SocPagination, fmtTime } from './socUtils';
 
 const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -104,7 +105,7 @@ export default function SOCIncidents() {
       </SocCard>
 
       <SocCard style={{ padding: 0, overflow: 'hidden' }}>
-        {loading ? <div className="hp-loading"><span>Loading incidents...</span></div>
+        {loading ? <LoadingState label="Loading security incidents..." compact />
           : items.length === 0 ? <p style={{ padding: 24, color: 'var(--text-secondary)', margin: 0 }}>No incidents found.</p>
           : items.map(inc => (
             <div key={inc.incident_id} style={{ borderBottom: '1px solid var(--border-color)' }}>

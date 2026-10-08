@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import LoadingState from './LoadingState';
 import { API, SocPageHeader, SocCard, SocNotice } from './socUtils';
 
 const POLICY_FIELDS = [
@@ -65,7 +66,7 @@ export default function SOCPolicies() {
     }
   };
 
-  if (loading) return <div className="hp-loading"><span>Loading policies...</span></div>;
+  if (loading) return <LoadingState label="Loading security policies..." fullScreen={false} />;
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 30 }}>
