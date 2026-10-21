@@ -6,23 +6,17 @@ import json
 import os
 import uuid
 from datetime import datetime
+from storage_paths import data_file, read_json, write_json
 
-REPORTS_FILE = "report_history.json"
+REPORTS_FILE = data_file("report_history.json")
 
 
 def _read():
-    if not os.path.exists(REPORTS_FILE):
-        return []
-    try:
-        with open(REPORTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return read_json(REPORTS_FILE, [])
 
 
 def _write(data):
-    with open(REPORTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    write_json(REPORTS_FILE, data, ensure_ascii=False)
 
 
 def save_report_record(

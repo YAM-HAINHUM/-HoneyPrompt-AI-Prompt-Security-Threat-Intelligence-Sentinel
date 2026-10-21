@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Shield, ShieldAlert, ShieldCheck, Users, Activity, AlertTriangle, Zap, Clock, TrendingUp } from 'lucide-react';
-import { API, SEV_COLOR, fmtTime, MiniStat, SocPageHeader, SocCard, SocNotice } from './socUtils';
+import { API, SEV_COLOR, fmtTime, MiniStat, SocPageHeader, SocCard, SocNotice, authH } from './socUtils';
 import LoadingState from './LoadingState';
 
 const STATUS_CFG = {
@@ -15,24 +15,43 @@ export default function SOCCommandCenter() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [recentAlerts, setRecentAlerts] = useState([]);
+  const latestRequest = useRef(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    const requestId = ++latestRequest.current;
     try {
       const [cc, al] = await Promise.all([
-        axios.get(`${API}/api/soc/command-center`),
-        axios.get(`${API}/api/soc/alerts?page=1&page_size=8&exclude_test=true`),
+        axios.get(`${API}/api/soc/command-center`, { headers: authH() }),
+        axios.get(`${API}/api/soc/alerts?page=1&page_size=8&exclude_test=true`, { headers: authH() }),
       ]);
+      if (requestId !== latestRequest.current) return;
       setData(cc.data);
       setRecentAlerts(al.data.items || []);
       setError('');
     } catch (e) {
-      setError(e.response?.data?.detail || 'Failed to load command center');
+      if (requestId === latestRequest.current) {
+        setError(e.response?.data?.detail || 'Failed to load command center');
+      }
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(); const id = setInterval(load, 8000); return () => clearInterval(id); }, []);
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 10000);
+    const onRefresh = () => load();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
 
   if (loading) return <LoadingState label="Loading Security Command Center..." fullScreen />;
 
@@ -71,7 +90,7 @@ export default function SOCCommandCenter() {
           { label: 'Threats · Last 30d', value: data?.threats_30d, icon: Activity, color: '#f59e0b' },
         ].map(({ label, value, icon: Icon, color }) => (
           <SocCard key={label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px' }}>
-            <div style={{ width: 42, height: 42, display: 'grid', placeItems: 'center', borderRadius: 10, background: `${color}15`, color, flexShrink: 0 }}>
+            <div style={{ width: 42, height: 42, display: 'grid', placeItems: 'center', borderRadius: 10, background: `${color}15`, color, flexShrink: 0, transition: 'transform 0.2s ease' }}>
               <Icon size={20} />
             </div>
             <div>
@@ -97,7 +116,7 @@ export default function SOCCommandCenter() {
         {recentAlerts.length === 0 ? (
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>No recent alerts. System is clean.</p>
         ) : recentAlerts.map(a => (
-          <div key={a.alert_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid var(--border-color)' }}>
+          <div key={a.alert_id} className="soc-alert-row" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid var(--border-color)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: SEV_COLOR[a.severity] || '#64748b', flexShrink: 0, boxShadow: `0 0 6px ${SEV_COLOR[a.severity] || '#64748b'}` }} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

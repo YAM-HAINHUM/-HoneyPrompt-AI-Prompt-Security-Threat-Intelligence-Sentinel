@@ -5,6 +5,11 @@ import LoadingState from './LoadingState';
 
 export const API = 'http://127.0.0.1:8000';
 
+export const authH = () => {
+  const t = localStorage.getItem('hp_token');
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
+
 export const SEV_COLOR = {
   CRITICAL: '#dc2626', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#10b981', NONE: '#64748b',
 };
@@ -38,25 +43,39 @@ export function useSOCFetch(url, deps = [], interval = 0) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetch = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${API}${url}`);
+      const res = await axios.get(`${API}${url}`, { headers: authH() });
       setData(res.data);
       setError('');
     } catch (e) {
-      setError(e.response?.data?.detail || 'Failed to load data');
+      if (e.response?.status !== 401)
+        setError(e.response?.data?.detail || 'Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, [url]);
+  // deps spread intentionally included so callers can pass filter state
+  }, [url, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetch();
-    if (interval > 0) {
-      const id = setInterval(fetch, interval);
-      return () => clearInterval(id);
-    }
-  }, [fetch, ...deps]);
+    const timers = [];
+    if (interval > 0) timers.push(setInterval(fetch, interval));
+    const onRefresh = () => fetch();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    // Re-fetch when the tab becomes visible again (e.g. after navigation)
+    const onVisible = () => { if (document.visibilityState === 'visible') fetch(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      timers.forEach(clearInterval);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetch, interval]);
 
   return { data, loading, error, refetch: fetch };
 }
@@ -75,7 +94,7 @@ export function SocPageHeader({ icon, title, subtitle, children }) {
 }
 
 export function SocCard({ children, style, className = '' }) {
-  return <div className={`card ${className}`} style={style}>{children}</div>;
+  return <div className={`card soc-card ${className}`} style={style}>{children}</div>;
 }
 
 export function SocBadge({ label, color, bg }) {
@@ -149,10 +168,13 @@ export function SocNotice({ msg, onDismiss, type = 'info' }) {
   );
 }
 
-export function MiniStat({ label, value, color, sub }) {
+export function MiniStat({ label, value, color, sub, icon: Icon }) {
   return (
-    <div className="card" style={{ padding: '14px 16px', minWidth: 110 }}>
-      <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>{label}</div>
+    <div className="card soc-mini-stat" style={{ padding: '14px 16px', minWidth: 110 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 6 }}>{label}</div>
+        {Icon && <Icon size={16} color={color || 'var(--text-secondary)'} style={{ opacity: 0.5, transition: 'transform 0.2s ease' }} />}
+      </div>
       <div style={{ fontSize: '1.7rem', fontWeight: 800, color: color || 'var(--text-primary)', lineHeight: 1.1 }}>{value ?? '—'}</div>
       {sub && <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: 4 }}>{sub}</div>}
     </div>

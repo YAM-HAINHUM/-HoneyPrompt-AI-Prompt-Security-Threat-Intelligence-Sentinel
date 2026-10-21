@@ -4,6 +4,7 @@ import { Send, ShieldAlert, ShieldX, RotateCcw, Trash2, Pencil, Square, Check, X
 import axios from 'axios';
 import LoadingState from './LoadingState';
 import CountdownTimer from './CountdownTimer';
+import MarkdownMessage from './MarkdownMessage';
 
 const DEFAULT_CHAT_PREFERENCES = { compactChat: false, sendOnEnter: true };
 
@@ -136,6 +137,8 @@ export default function ChatPage() {
         prompt: message,
         _blocked: d.classification === 'MALICIOUS',
       }]);
+      // Notify dashboard and chat history to refresh live data
+      window.dispatchEvent(new CustomEvent('hp-data-refresh'));
     } catch (err) {
       if (axios.isCancel(err) || err.name === 'CanceledError') {
         // User stopped generation — remove the pending user bubble if regenerate
@@ -314,7 +317,7 @@ export default function ChatPage() {
                     <ShieldAlert size={15} /> REQUEST FAILED
                   </div>
                 )}
-                {msg.content}
+                <div className="markdown-content"><MarkdownMessage content={msg.content} /></div>
               </div>
               {msg.prompt && !msg._blocked && (
                 <button className="chat-retry-button" onClick={() => sendMessage(msg.prompt, true)} disabled={loading}>

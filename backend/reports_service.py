@@ -9,15 +9,16 @@ from datetime import datetime, timedelta
 import json
 import os
 import re
+from storage_paths import data_file, read_json
 
-ATTACKS_FILE = "attacks.json"
-USERS_FILE = "users.json"
-CONVERSATIONS_FILE = "conversations.json"
-ALERTS_FILE = "soc_alerts.json"
-INCIDENTS_FILE = "soc_incidents.json"
-AUDIT_FILE = "soc_audit.json"
-ACTIVITY_FILE = "security_activity.json"
-RISK_FILE = "soc_risk.json"
+ATTACKS_FILE = data_file("attacks.json")
+USERS_FILE = data_file("users.json")
+CONVERSATIONS_FILE = data_file("conversations.json")
+ALERTS_FILE = data_file("soc_alerts.json")
+INCIDENTS_FILE = data_file("soc_incidents.json")
+AUDIT_FILE = data_file("soc_audit.json")
+ACTIVITY_FILE = data_file("security_activity.json")
+RISK_FILE = data_file("soc_risk.json")
 
 ALL_THREAT_CATEGORIES = [
     "Prompt Injection",
@@ -36,13 +37,7 @@ ALL_THREAT_CATEGORIES = [
 
 
 def _read_json(path, default):
-    if not os.path.exists(path):
-        return default
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return default
+    return read_json(path, default)
 
 
 def _sanitize_text(value: str) -> str:

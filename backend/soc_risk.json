@@ -1,0 +1,32 @@
+{
+  "yammahajan0312@gmail.com": {
+    "username": "yammahajan0312@gmail.com",
+    "risk_score": 24,
+    "malicious_count": 2,
+    "suspicious_count": 5,
+    "consecutive_attacks": 0,
+    "last_threat": "2026-10-09T09:34:56.912827",
+    "last_threat_type": "Harmful Request",
+    "last_activity": "2026-10-10T17:32:40.357999",
+    "total_prompts": 8,
+    "risk_level": "LOW",
+    "last_classification": "SAFE",
+    "last_severity": "NONE",
+    "last_risk_score": 30,
+    "last_action": "ALLOWED",
+    "last_conversation_id": "85584d84-a304-4bb5-abd4-52dd9598dcb0",
+    "last_request_id": "E3F32346"
+  },
+  "analyst": {
+    "username": "analyst",
+    "risk_score": 62,
+    "malicious_count": 1,
+    "suspicious_count": 0,
+    "consecutive_attacks": 1,
+    "last_threat": "2026-10-09T13:10:05.105502",
+    "last_threat_type": "System Prompt Extraction",
+    "last_activity": "2026-10-09T13:10:05.105487",
+    "total_prompts": 1,
+    "risk_level": "HIGH"
+  }
+}

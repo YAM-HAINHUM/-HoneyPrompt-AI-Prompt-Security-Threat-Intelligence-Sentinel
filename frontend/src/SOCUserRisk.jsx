@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertTriangle, ShieldCheck, UserX, UserCheck, ShieldAlert, RefreshCw, X, Clock, Lock, Unlock, Search } from 'lucide-react';
+import { AlertTriangle, ShieldCheck, UserX, UserCheck, ShieldAlert, RefreshCw, X, Clock, Lock, Unlock, Search, MessageSquare } from 'lucide-react';
 import LoadingState from './LoadingState';
 import CountdownTimer from './CountdownTimer';
-import { API, SocPageHeader, SocCard, SocBadge, SocNotice, fmtTime } from './socUtils';
+import { API, SocPageHeader, SocCard, SocBadge, SocNotice, fmtTime, authH } from './socUtils';
 
 const RISK_COLOR = { CRITICAL: '#dc2626', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#10b981' };
 
@@ -22,6 +22,9 @@ export default function SOCUserRisk() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [conversationDetail, setConversationDetail] = useState(null);
+  const [conversationLoading, setConversationLoading] = useState(false);
   const [notice, setNotice] = useState({ msg: '', type: 'info' });
   const [search, setSearch] = useState('');
 
@@ -36,28 +39,33 @@ export default function SOCUserRisk() {
   const [unblockReason, setUnblockReason] = useState('');
   const [isSubmittingUnblock, setIsSubmittingUnblock] = useState(false);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/soc/user-risk`);
+      const res = await axios.get(`${API}/api/soc/user-risk`, { headers: authH() });
       setUsers(res.data || []);
     } catch (e) {
       setNotice({ msg: e.response?.data?.detail || 'Failed to load user risk profiles', type: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadUsers();
     const interval = setInterval(loadUsers, 12000);
-    return () => clearInterval(interval);
-  }, []);
+    const onVisible = () => { if (document.visibilityState === 'visible') loadUsers(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [loadUsers]);
 
   const loadProfile = async (username) => {
     setSelectedUser(username);
     setProfileLoading(true);
     try {
-      const res = await axios.get(`${API}/api/soc/user-risk/${encodeURIComponent(username)}`);
+      const res = await axios.get(`${API}/api/soc/user-risk/${encodeURIComponent(username)}`, { headers: authH() });
       setProfile(res.data);
     } catch (e) {
       setNotice({ msg: e.response?.data?.detail || 'Failed to load detailed profile', type: 'error' });
@@ -66,9 +74,51 @@ export default function SOCUserRisk() {
     }
   };
 
+  const loadConversation = async (username, conversationId) => {
+    setSelectedConversation(conversationId);
+    setConversationLoading(true);
+    try {
+      const res = await axios.get(
+        `${API}/api/soc/user-risk/${encodeURIComponent(username)}/conversations/${encodeURIComponent(conversationId)}`,
+        { headers: authH() },
+      );
+      setConversationDetail(res.data);
+    } catch (e) {
+      setNotice({ msg: e.response?.data?.detail || 'Failed to load user conversation', type: 'error' });
+    } finally {
+      setConversationLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const refreshProfiles = () => {
+      loadUsers();
+      if (selectedUser) {
+        loadProfile(selectedUser);
+        if (selectedConversation) loadConversation(selectedUser, selectedConversation);
+      }
+    };
+    window.addEventListener('hp-data-refresh', refreshProfiles);
+    window.addEventListener('hp-admin-alert', refreshProfiles);
+    return () => {
+      window.removeEventListener('hp-data-refresh', refreshProfiles);
+      window.removeEventListener('hp-admin-alert', refreshProfiles);
+    };
+  }, [selectedUser, selectedConversation]);
+
+  useEffect(() => {
+    if (!selectedUser) return undefined;
+    const refreshSelectedUser = () => {
+      loadProfile(selectedUser);
+      if (selectedConversation) loadConversation(selectedUser, selectedConversation);
+    };
+    const interval = window.setInterval(refreshSelectedUser, 12000);
+    return () => window.clearInterval(interval);
+  }, [selectedUser, selectedConversation]);
+
   const resetRisk = async (username) => {
     try {
-      await axios.post(`${API}/api/soc/user-risk/${encodeURIComponent(username)}/reset`);
+      await axios.post(`${API}/api/soc/user-risk/${encodeURIComponent(username)}/reset`, {}, { headers: authH() });
       setNotice({ msg: `Risk score reset for ${username}`, type: 'success' });
       loadUsers();
       if (selectedUser === username) loadProfile(username);
@@ -204,7 +254,11 @@ export default function SOCUserRisk() {
                     return (
                       <tr
                         key={u.username}
-                        onClick={() => loadProfile(u.username)}
+                        onClick={() => {
+                          setSelectedConversation(null);
+                          setConversationDetail(null);
+                          loadProfile(u.username);
+                        }}
                         style={{
                           cursor: 'pointer',
                           background: selectedUser === u.username ? 'rgba(245,197,24,0.06)' : 'transparent',
@@ -345,7 +399,12 @@ export default function SOCUserRisk() {
                 <div className="eyebrow" style={{ marginBottom: 2 }}>SECURITY MONITOR</div>
                 <strong style={{ fontSize: '1.05rem', color: 'var(--accent-gold)' }}>{selectedUser}</strong>
               </div>
-              <button className="btn-secondary" onClick={() => { setSelectedUser(null); setProfile(null); }}>
+              <button className="btn-secondary" onClick={() => {
+                setSelectedUser(null);
+                setProfile(null);
+                setSelectedConversation(null);
+                setConversationDetail(null);
+              }}>
                 <X size={14} /> Close
               </button>
             </div>
@@ -414,6 +473,77 @@ export default function SOCUserRisk() {
                     <span style={{ fontSize: '0.62rem', color: l.action === 'BLOCKED' ? '#ef4444' : '#64748b', fontFamily: 'var(--font-mono)' }}>{l.action}</span>
                   </div>
                 ))}
+
+                <div className="eyebrow" style={{ marginTop: 18, marginBottom: 8 }}>USER CHAT HISTORY</div>
+                {(profile.conversations || []).length === 0 ? (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>No saved conversations for this user.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 6 }}>
+                    {profile.conversations.map(conversation => (
+                      <button
+                        key={conversation.conversation_id}
+                        className="btn-secondary"
+                        onClick={() => loadConversation(selectedUser, conversation.conversation_id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 9,
+                          width: '100%',
+                          textAlign: 'left',
+                          borderColor: selectedConversation === conversation.conversation_id ? 'var(--accent-gold)' : 'var(--border-color)',
+                        }}
+                      >
+                        <MessageSquare size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ minWidth: 0, flex: 1 }}>
+                          <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 650, color: 'var(--text-primary)' }}>
+                            {conversation.title || 'Untitled conversation'}
+                          </span>
+                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.66rem', color: 'var(--text-secondary)' }}>
+                            {conversation.first_prompt_preview || 'No messages yet'}
+                          </span>
+                        </span>
+                        <span style={{ flexShrink: 0, textAlign: 'right', fontSize: '0.62rem', color: conversation.security_status === 'MALICIOUS' ? '#ef4444' : conversation.security_status === 'SUSPICIOUS' ? '#f59e0b' : 'var(--text-secondary)' }}>
+                          {conversation.message_count} messages
+                          <br />
+                          {fmtTime(conversation.updated_at)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {selectedConversation && (
+                  <div style={{ marginTop: 12, border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
+                    {conversationLoading ? (
+                      <LoadingState label="Loading conversation..." compact />
+                    ) : conversationDetail ? (
+                      <>
+                        <div style={{ padding: '9px 12px', background: 'var(--bg-dark)', borderBottom: '1px solid var(--border-color)', fontSize: '0.73rem', fontWeight: 700 }}>
+                          {conversationDetail.conversation.title || 'Conversation'} · {conversationDetail.messages.length} messages
+                        </div>
+                        <div style={{ maxHeight: 420, overflowY: 'auto', padding: 10, display: 'grid', gap: 9 }}>
+                          {conversationDetail.messages.map(message => (
+                            <div key={message.message_id} style={{ padding: 10, borderRadius: 7, background: 'var(--bg-dark)', border: '1px solid var(--border-color)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: '0.63rem', color: 'var(--text-secondary)' }}>
+                                <strong style={{ color: 'var(--text-primary)' }}>User message</strong>
+                                <span>{fmtTime(message.timestamp)}</span>
+                              </div>
+                              <div style={{ margin: '5px 0 10px', fontSize: '0.75rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{message.prompt}</div>
+                              <div style={{ fontSize: '0.63rem', color: 'var(--text-secondary)', fontWeight: 700 }}>CHATBOT RESPONSE</div>
+                              <div style={{ marginTop: 4, fontSize: '0.75rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{message.response}</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, paddingTop: 7, borderTop: '1px solid var(--border-color)', fontSize: '0.62rem', color: 'var(--text-secondary)' }}>
+                                <span>{message.classification} · {message.severity}</span>
+                                <span>Risk {message.risk_score}/100</span>
+                                <span>{message.action}</span>
+                                <span>ID {message.request_id}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                )}
               </>
             ) : null}
           </SocCard>

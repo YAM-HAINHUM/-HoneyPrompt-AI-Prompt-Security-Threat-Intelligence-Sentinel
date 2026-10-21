@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
-import { API, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct, SEV_COLOR } from './socUtils';
+import { API, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct, SEV_COLOR, authH } from './socUtils';
 
 const RANGES = [{ label: '24H', hours: 24 }, { label: '7D', hours: 168 }, { label: '30D', hours: 720 }];
 
@@ -11,19 +11,35 @@ export default function SOCThreatIntelligence() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
 
-  const load = async (h) => {
-    setLoading(true);
+  const load = useCallback(async (h) => {
     try {
-      const res = await axios.get(`${API}/api/soc/threat-intelligence?hours=${h}`);
+      const res = await axios.get(`${API}/api/soc/threat-intelligence?hours=${h}`, { headers: authH() });
       setData(res.data);
+      setNotice('');
     } catch (e) {
-      setNotice(e.response?.data?.detail || 'Failed to load threat intelligence');
+      if (e.response?.status !== 401)
+        setNotice(e.response?.data?.detail || 'Failed to load threat intelligence');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(hours); }, [hours]);
+  useEffect(() => {
+    setLoading(true);
+    load(hours);
+    const id = setInterval(() => load(hours), 10000);
+    const onNew = () => load(hours);
+    window.addEventListener('hp-admin-alert', onNew);
+    window.addEventListener('hp-data-refresh', onNew);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(hours); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-admin-alert', onNew);
+      window.removeEventListener('hp-data-refresh', onNew);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [hours, load]);
 
   const topTypes = Object.entries(data?.top_attack_types || {}).sort((a, b) => b[1] - a[1]);
   const topUsers = Object.entries(data?.top_targeted_users || {}).sort((a, b) => b[1] - a[1]);

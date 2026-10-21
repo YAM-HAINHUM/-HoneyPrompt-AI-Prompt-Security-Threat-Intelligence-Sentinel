@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
 
 const SEV_COLOR = { CRITICAL: '#dc2626', HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981', NONE: '#64748b' };
 
@@ -12,20 +15,29 @@ export default function ThreatMatrixPage() {
   const [dateTo, setDateTo] = useState('');
   const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await axios.get('http://127.0.0.1:8000/api/logs');
-        setLogs(res.data.slice().reverse());
-        setLoadError('');
-      } catch (error) {
+  const fetchLogs = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/api/logs`, { headers: authH() });
+      setLogs(res.data.slice().reverse());
+      setLoadError('');
+    } catch (error) {
+      if (error.response?.status !== 401)
         setLoadError(error.response?.data?.detail || 'Threat events could not be loaded.');
-      }
-    };
-    fetch();
-    const id = setInterval(fetch, 5000);
-    return () => clearInterval(id);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchLogs();
+    const id = setInterval(fetchLogs, 5000);
+    const onRefresh = () => fetchLogs();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+    };
+  }, [fetchLogs]);
 
   const FILTERS = ['All', 'Safe', 'Suspicious', 'Malicious', 'Critical', 'High', 'Medium', 'Blocked'];
 

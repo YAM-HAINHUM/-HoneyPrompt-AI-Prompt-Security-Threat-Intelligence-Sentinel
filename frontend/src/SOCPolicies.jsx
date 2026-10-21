@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
-import { API, SocPageHeader, SocCard, SocNotice } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SocNotice } from './socUtils';
 
 const POLICY_FIELDS = [
   { key: 'warning_threshold', label: 'Warning Threshold', desc: 'Consecutive malicious prompts before warning', type: 'number', min: 1, max: 20 },
@@ -27,20 +27,21 @@ export default function SOCPolicies() {
   const [notice, setNotice] = useState({ msg: '', type: 'info' });
   const [dirty, setDirty] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/soc/policies`);
+      const res = await axios.get(`${API}/api/soc/policies`, { headers: authH() });
       setPolicies(res.data);
       setDraft(res.data);
       setDirty(false);
     } catch (e) {
-      setNotice({ msg: e.response?.data?.detail || 'Failed to load policies', type: 'error' });
+      if (e.response?.status !== 401)
+        setNotice({ msg: e.response?.data?.detail || 'Failed to load policies', type: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const set = (key, value) => {
     setDraft(d => ({ ...d, [key]: value }));
@@ -54,7 +55,7 @@ export default function SOCPolicies() {
     }
     setSaving(true);
     try {
-      const res = await axios.patch(`${API}/api/soc/policies`, draft);
+      const res = await axios.patch(`${API}/api/soc/policies`, draft, { headers: authH() });
       setPolicies(res.data);
       setDraft(res.data);
       setDirty(false);

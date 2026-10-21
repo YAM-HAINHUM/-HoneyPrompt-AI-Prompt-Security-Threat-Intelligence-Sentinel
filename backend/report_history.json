@@ -982,5 +982,29 @@
     "record_count": 0,
     "status": "SUCCESS",
     "generated_at": "2026-10-06T09:08:51.283106"
+  },
+  {
+    "report_id": "RPT-4E08B1A9",
+    "generated_by": "yammahajan0312@gmail.com",
+    "role": "user",
+    "report_type": "personal_security",
+    "format": "PDF",
+    "date_from": "2026-09-08",
+    "date_to": "2026-10-08",
+    "filters": {
+      "report_type": "personal_security",
+      "date_range": "30d",
+      "date_from": null,
+      "date_to": null,
+      "classification": null,
+      "severity": null,
+      "threat_type": null,
+      "user": null,
+      "action": null,
+      "status": null
+    },
+    "record_count": 54,
+    "status": "SUCCESS",
+    "generated_at": "2026-10-08T16:25:23.063195"
   }
 ]

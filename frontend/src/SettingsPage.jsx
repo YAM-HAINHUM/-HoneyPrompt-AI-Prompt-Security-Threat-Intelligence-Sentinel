@@ -5,6 +5,7 @@ import { useTheme } from './ThemeContext';
 import { useAuth } from './AuthContext';
 import { Moon, Sun, Shield, User, Server, Bell, Activity, SlidersHorizontal, MessageSquare, LogOut, ArrowRight, Save, ShieldAlert } from 'lucide-react';
 import LoadingState from './LoadingState';
+import MarkdownMessage from './MarkdownMessage';
 import CountdownTimer from './CountdownTimer';
 
 const defaultPreferences = { inAppAlerts: true, compactChat: false, sendOnEnter: true };
@@ -203,7 +204,7 @@ export default function SettingsPage() {
           <header><div><strong>{conversation.title}</strong><span>{conversation.messages.length} messages · Last activity {new Date(conversation.updated_at).toLocaleString()}</span></div><span className="transcript-conversation-id">{conversation.conversation_id}</span></header>
           {conversation.messages.map(message => <section className="admin-transcript-message" key={message.message_id}>
             <div><span>User prompt</span><p>{message.prompt}</p></div>
-            <div><span>SENTINEL response</span><p>{message.response}</p></div>
+            <div><span>SENTINEL response</span><div className="markdown-content"><MarkdownMessage content={message.response} /></div></div>
             <footer><strong>{message.classification}</strong><span>{message.threat_type}</span><span>{message.severity}</span><span>{Math.round((message.confidence || 0) * 100)}% confidence</span><span>Action: {message.action}</span><time>{new Date(message.timestamp).toLocaleString()}</time>{message.reason && <span>Reason: {message.reason}</span>}</footer>
           </section>)}
         </article>)}</div>}

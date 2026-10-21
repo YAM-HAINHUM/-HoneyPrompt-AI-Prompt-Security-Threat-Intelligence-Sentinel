@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
 
 const CLF_COLOR = { SAFE: '#10b981', SUSPICIOUS: '#f59e0b', MALICIOUS: '#ef4444' };
 const SEV_COLOR = { CRITICAL: '#dc2626', HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981', NONE: '#64748b' };
@@ -24,22 +27,37 @@ export default function AnalyticsPage() {
   const [stats, setStats] = useState({});
   const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const [lRes, sRes] = await Promise.all([
-          axios.get('http://127.0.0.1:8000/api/logs'),
-          axios.get('http://127.0.0.1:8000/api/stats'),
-        ]);
-        setLogs(lRes.data);
-        setStats(sRes.data);
-        setLoadError('');
-      } catch (error) {
+  const fetchData = useCallback(async () => {
+    try {
+      const headers = authH();
+      const [lRes, sRes] = await Promise.all([
+        axios.get(`${API}/api/logs`, { headers }),
+        axios.get(`${API}/api/stats`, { headers }),
+      ]);
+      setLogs(lRes.data);
+      setStats(sRes.data);
+      setLoadError('');
+    } catch (error) {
+      if (error.response?.status !== 401)
         setLoadError(error.response?.data?.detail || 'Analytics data could not be loaded.');
-      }
-    };
-    fetch();
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+    const id = setInterval(fetchData, 10000);
+    const onRefresh = () => fetchData();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchData(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchData]);
 
   // Threat type distribution
   const threatCounts = {};

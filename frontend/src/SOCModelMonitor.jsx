@@ -1,19 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
-import { API, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SocNotice, MiniStat, fmtPct } from './socUtils';
 
 export default function SOCModelMonitor() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
 
-  useEffect(() => {
-    axios.get(`${API}/api/soc/model`)
-      .then(r => setData(r.data))
-      .catch(e => setNotice(e.response?.data?.detail || 'Failed to load model info'))
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    try {
+      const r = await axios.get(`${API}/api/soc/model`, { headers: authH() });
+      setData(r.data);
+    } catch (e) {
+      if (e.response?.status !== 401)
+        setNotice(e.response?.data?.detail || 'Failed to load model info');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
+  }, [load]);
 
   if (loading) return <LoadingState label="Loading AI model telemetry..." fullScreen={false} />;
 

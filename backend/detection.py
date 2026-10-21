@@ -282,7 +282,8 @@ THREAT_RULES = [
 # If these appear alongside sensitive words, reduce false positives.
 # ---------------------------------------------------------------------------
 _EDUCATIONAL_CONTEXT_PATTERNS = [
-    r"\b(?:how\s+(?:does|do|can\s+i\s+learn|can\s+i\s+study)|what\s+is|explain|understand|learn\s+about|study|research|course|tutorial|book|article|paper|thesis|academic|university|college|class|lecture|exam|quiz|homework|assignment|project|report|essay|presentation|demo|example|sample|practice|exercise|lab|workshop|conference|seminar|webinar|podcast|video|blog|documentation|wiki|faq|guide|overview|introduction|basics|fundamentals|concept|theory|history|background|context|definition|meaning|difference\s+between|compare|contrast|pros\s+and\s+cons|advantages|disadvantages|use\s+case|real.world|scenario|case\s+study)\b",
+    r"\b(?:how\s+(?:does|do|can\s+i\s+learn|can\s+i\s+study)|what\s+is|explain|learn\s+about|study|research|course|tutorial|book|article|paper|thesis|academic|university|college|class|lecture|exam|quiz|homework|assignment|project|report|essay|presentation|demo|example|sample|practice|exercise|lab|workshop|conference|seminar|webinar|podcast|video|blog|documentation|wiki|faq|guide|overview|introduction|basics|fundamentals|concept|theory|history|background|context|definition|meaning|difference\s+between|compare|contrast|pros\s+and\s+cons|advantages|disadvantages|use\s+case|real.world|scenario|case\s+study)\b",
+    r"\b(?:help\s+(?:me\s+)?understand|want\s+to\s+understand|trying\s+to\s+understand|understand\s+(?:the|how|why|what))\b",
     r"\b(?:cybersecurity|information\s+security|infosec|penetration\s+testing|pen\s+test|ethical\s+hacking|bug\s+bounty|ctf|capture\s+the\s+flag|red\s+team|blue\s+team|purple\s+team|security\s+research|vulnerability\s+research|threat\s+modeling|risk\s+assessment|security\s+audit|compliance|nist|owasp|mitre|att&ck|cve|cwe|cvss)\b",
     r"\b(?:defend|protect|prevent|mitigate|detect|monitor|analyze|investigate|respond\s+to|patch|fix|remediate|harden|secure|safeguard|audit|review|assess|test|scan|probe|identify|discover|report|disclose|responsible\s+disclosure)\b",
     r"\b(?:for\s+(?:educational|learning|research|academic|study|training|awareness|demonstration|testing|practice|fun|a\s+class|a\s+course|a\s+project|a\s+report|a\s+paper|a\s+presentation|a\s+demo|a\s+ctf|a\s+lab|a\s+workshop|a\s+seminar|a\s+conference|a\s+book|a\s+tutorial|a\s+guide|a\s+blog|a\s+video|a\s+podcast|a\s+article|a\s+thesis|a\s+assignment|a\s+homework|a\s+exam|a\s+quiz|a\s+exercise|a\s+scenario|a\s+case\s+study|a\s+use\s+case|a\s+example|a\s+sample|a\s+overview|a\s+introduction|a\s+background|a\s+context|a\s+definition|a\s+concept|a\s+theory|a\s+history|a\s+comparison|a\s+contrast|a\s+analysis|a\s+review|a\s+assessment|a\s+audit|a\s+test|a\s+scan|a\s+probe|a\s+identification|a\s+discovery|a\s+report|a\s+disclosure))\b",
@@ -290,7 +291,9 @@ _EDUCATIONAL_CONTEXT_PATTERNS = [
 
 
 def _is_educational_context(text_lower: str) -> bool:
-    """Return True if the text contains clear educational/defensive/research signals."""
+    """Return True if the text contains clear educational/defensive/research signals, and no overt illegal intent."""
+    if re.search(r"\b(?:illegally?|unlawfully?|without\s+(?:permission|authorization|consent|his\s+knowledge|him\s+knowing|her\s+knowing|their\s+knowing|getting\s+caught|being\s+detected)|unauthorized)\b", text_lower):
+        return False
     return any(re.search(p, text_lower) for p in _EDUCATIONAL_CONTEXT_PATTERNS)
 
 
@@ -366,12 +369,19 @@ SEMANTIC_INTENT_RULES = [
         "risk": 100,
         "intent": [
             r"\b(?:how\s+(?:(?:can|could|would)\s+)?(?:i|someone|a\s+person)|help\s+me|teach\s+me\s+to|show\s+me\s+how\s+to|give\s+me\s+(?:steps|instructions)|(?:steps|instructions|methods?|plans?|strategies|ways?)\s+to|i\s+(?:want|need|plan|intend)\s+to|write|build|create|deploy|make)\b",
+            r"\b(?:i\s+(?:want|need|plan|intend|am\s+going)\s+to\s+(?:break\s+into|get\s+into|access|infiltrate|compromise|hack|attack))\b",
+            r"\b(?:break\s+into|get\s+(?:unauthorized|illegal)\s+access|access\s+without\s+(?:permission|authorization))\b",
         ],
         "target": [
             r"\b(?:attack|hack|breach|compromise|infiltrate|infect|exploit|phish|disrupt|take\s+down)\b.{0,60}\b(?:organization|company|business|network|server|website|account|computer|person|users?|system)\b",
+            r"\b(?:attack|hack|breach|infiltrate|exploit)\b.{0,60}\b(?:friend'?s?|someone'?s?|his|her|their)\s+(?:system|computer|phone|account|network|device|laptop|pc)\b",
+            r"\b(?:hack|attack|breach)\s+(?:a\s+|the\s+)?(?:system|network|server|website|account)\s+illegally\b",
+            r"\b(?:illegally|unauthorized)\s+(?:hack|attack|breach)\b",
             r"\b(?:ransomware|keylogger|credential\s+stealer|malware|exploit\s+kit|botnet|bomb|explosive|poison)\b",
             r"\bwrite\s+code\s+to\s+exploit\b",
             r"\b(?:sql\s+injection|xss|cross.site\s+scripting|buffer\s+overflow|remote\s+code\s+execution)\b.{0,40}\b(?:exploit|attack|vulnerability|payload|code)\b",
+            r"\b(?:company|organization|business|network|server|website|system|account).{0,40}\b(?:without\s+(?:permission|authorization|their\s+knowledge)|illegally|unauthorized)\b",
+            r"\b(?:break\s+into|get\s+into).{0,40}\b(?:company|organization|server|network|system|account|website|database)\b",
         ],
         "exclude": [
             r"\b(?:defend|protect|prevent|mitigate|detect|recognize|monitor|analyze|investigate|respond\s+to)\b.{0,60}\b(?:attack|hack|breach|compromise|infiltrate|infect|exploit|phish|ransomware|keylogger|malware|botnet)\b",
@@ -385,6 +395,25 @@ SEMANTIC_INTENT_RULES = [
 # Suspicious probing — lower risk, not malicious
 SUSPICIOUS_RULES = [
     {
+        "id": "ambiguous_attack_query",
+        "threat_type": "Unauthorized Access Probing",
+        "severity": "MEDIUM",
+        "risk": 55,
+        "patterns": [
+            r"\b(?:can|could|is\s+it\s+possible\s+to|how\s+easy\s+is\s+it\s+to)\s+(?:i\s+|someone\s+|a\s+person\s+)?(?:attack|hack|breach|infiltrate|break\s+into)\s+(?:a\s+|any\s+|the\s+)?(?:system|computer|server|network|website|database|account)",
+            r"\b(?:attack|hack|breach)\s+(?:a\s+|any\s+)?(?:system|computer|server|network)\s+(?:easily|quick(?:ly)?|simple|simply|fast)\b",
+            r"\b(?:is\s+it\s+easy\s+to|how\s+hard\s+is\s+it\s+to)\s+(?:attack|hack|breach)\b",
+            r"\b(?:can\s+i\s+hack|can\s+i\s+attack|can\s+we\s+hack)\b",
+        ],
+        "semantic": [
+            "can i attack a system easily",
+            "can i attack a system",
+            "can i attack easily",
+            "is it easy to hack",
+            "how to attack easily",
+        ],
+    },
+    {
         "id": "suspicious_probing",
         "threat_type": "Security Probing",
         "severity": "LOW",
@@ -395,11 +424,9 @@ SUSPICIOUS_RULES = [
             r"what\s+(instructions?|rules?|guidelines?|directives?|constraints?)\s+(do\s+you|are\s+you)\s+(follow|following|use|using|obey)",
             r"how\s+(are\s+you|were\s+you)\s+(programmed|configured|set\s+up|trained|instructed)",
             r"(?:how|where|when)\s+(?:are|were)\s+you\s+(programmed|configured|set\s+up|trained|instructed)",
-            r"what\s+(are\s+your|is\s+your)\s+(purpose|role|function|objective|goal|mission|directive)",
             r"(tell\s+me|explain)\s+(about\s+)?(your|the)\s+(programming|configuration|setup|training|instructions?)",
             r"(?:can|could)\s+you\s+(?:describe|explain|outline)\s+(your|the)\s+(response\s+)?(rules?|guidelines?|configuration|capabilities|limitations)",
             r"(?:can|could)\s+you\s+(?:describe|explain|outline)\s+how\s+(?:your|the)\s+(response\s+)?(rules?|guidelines?|configuration|capabilities|limitations)\s+(?:are|were)\s+(configured|defined|set\s+up)",
-            r"what\s+(capabilities|limitations|tools)\s+(do\s+you\s+have|are\s+available)",
             r"are\s+you\s+(allowed|permitted|able)\s+to\s+(tell|reveal|share|show)\s+(me\s+)?(your|the)\s+(instructions?|rules?|guidelines?|system)",
         ],
         "semantic": [
@@ -620,6 +647,308 @@ def _safe_result(text: str, malicious_probability: float | None = None) -> dict:
         "is_threat": False,
         "categories": [],
     }
+
+
+# ---------------------------------------------------------------------------
+# CONTEXT-AWARE ANALYSIS
+# Wraps analyze_prompt() with conversation history to enable progressive
+# escalation. A single ambiguous message stays SAFE/SUSPICIOUS; a conversation
+# that develops clear malicious intent escalates to MALICIOUS.
+# ---------------------------------------------------------------------------
+
+# Patterns that signal clear, specific, actionable malicious intent
+_SPECIFIC_TARGET_PATTERNS = [
+    r"\b(?:this|your|our|the)\s+(?:organization|company|network|server|website|system|database|account)\b",
+    r"\b(?:specific(?:ally)?|exact(?:ly)?|step[- ]by[- ]step|detailed?\s+instructions?|exactly\s+how)\b",
+    r"\b(?:i\s+(?:want|need|plan|intend|am\s+going)\s+to\s+(?:attack|hack|breach|compromise|infiltrate|exploit))\b",
+    r"\b(?:friend'?s?|someone'?s?|his|her|their)\s+(?:system|computer|phone|account|network|device|laptop|pc)\b",
+    r"\b(?:attack|hack|breach)\s+(?:my\s+friend|his\s+system|her\s+system|their\s+system)\b",
+    r"\b(?:give\s+me\s+(?:the\s+)?(?:steps|instructions|code|exploit|payload|script))\b",
+    r"\b(?:without\s+(?:getting\s+)?(?:caught|detected|traced|logged))\b",
+    r"\b(?:real\s+(?:credentials?|passwords?|tokens?|api\s+keys?))\b",
+    r"\b(?:illegally|unlawfully|without\s+(?:permission|authorization|consent|him\s+knowing|his\s+knowledge|them\s+knowing))\b",
+]
+
+# Patterns that indicate the conversation is escalating toward a specific target
+_ESCALATION_SIGNALS = [
+    r"\b(?:now\s+(?:tell|show|give|help)|so\s+(?:how|what|where)|next\s+(?:step|i\s+need|tell))\b",
+    r"\b(?:i\s+(?:already|just|have|got)\s+(?:access|the\s+password|the\s+credentials?|inside))\b",
+    r"\b(?:continuing\s+from|building\s+on|following\s+up|as\s+we\s+discussed)\b",
+    r"\b(?:i\s+(?:still\s+)?want\s+to\s+(?:hack|attack|break\s+into))\b",
+    r"\b(?:hack\s+his\s+system|attack\s+his\s+system)\b",
+]
+
+
+def _has_specific_malicious_target(text_lower: str) -> bool:
+    return any(re.search(p, text_lower) for p in _SPECIFIC_TARGET_PATTERNS)
+
+
+def _has_escalation_signal(text_lower: str) -> bool:
+    return any(re.search(p, text_lower) for p in _ESCALATION_SIGNALS)
+
+
+def analyze_with_context(
+    current_prompt: str,
+    conversation_history: list[dict],
+    conversation_risk_state: dict,
+    base_analysis: dict | None = None,
+) -> dict:
+    """
+    Intent-based, conversation-aware analysis.
+
+    Evaluates:
+      Current Prompt + Previous Conversation + Security Analysis + Intent Progression
+
+    Returns structured analysis with response_mode and admin_alert:
+      - classification: SAFE | SUSPICIOUS | MALICIOUS
+      - response_mode: NORMAL | EDUCATIONAL | CLARIFICATION | SAFE_REDIRECT | HONEYPOT | HIGH_RISK | BLOCKED
+      - admin_alert: bool
+    """
+    text_lower = re.sub(r"\s+", " ", current_prompt.casefold()).strip()
+
+    # Base single-message analysis
+    base = base_analysis if base_analysis is not None else analyze_prompt(current_prompt)
+
+    conv_risk = conversation_risk_state.get("risk_score", 0)
+    escalation_level = conversation_risk_state.get("escalation_level", 0)
+    escalation_label = conversation_risk_state.get("escalation_label", "SAFE")
+    prev_malicious = conversation_risk_state.get("malicious_count", 0)
+    prev_suspicious = conversation_risk_state.get("suspicious_count", 0)
+    honeypot_active = conversation_risk_state.get("honeypot_active", False)
+    intent_indicators: list[str] = []
+    context_escalated = False
+
+    admin_alert = False
+    response_mode = "NORMAL"
+    recommended_action = "Review Required"
+
+    # Prior message references
+    last_user_prompt = ""
+    last_classification = "SAFE"
+    for m in reversed(conversation_history):
+        if m.get("prompt"):
+            last_user_prompt = m["prompt"].casefold().strip()
+            last_classification = m.get("classification", "SAFE")
+            break
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 1: Academic / Educational Intent Re-evaluation
+    # If the user clarifies academic intent ("for my assignment works") after
+    # an ambiguous or probing question, re-evaluate complete conversation.
+    # -----------------------------------------------------------------------
+    is_academic_intent = bool(re.search(
+        r"\b(?:for\s+(?:my\s+)?(?:assignment|homework|coursework|project|studies|class|exam)|academic|university|college|for\s+school|for\s+class)\b",
+        text_lower
+    ))
+    has_overt_illegal = bool(re.search(r"\b(?:illegally?|without\s+(?:permission|authorization|consent)|hack\s+his)\b", text_lower))
+
+    if is_academic_intent and not has_overt_illegal:
+        intent_indicators.append("Re-evaluated complete conversation: legitimate academic/coursework context recognized")
+        base = {
+            **base,
+            "classification": "SAFE",
+            "threat_type": "None",
+            "severity": "NONE",
+            "risk_score": max(5, conv_risk - 25),
+            "confidence": 0.90,
+            "action": "ALLOWED",
+            "reason": "Legitimate academic intent recognized in conversation context.",
+        }
+        response_mode = "EDUCATIONAL"
+        admin_alert = False
+        recommended_action = "Monitor Activity"
+        context_escalated = True
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 2: Covert Intrusion / Detection Evasion Attempt
+    # "i want to hack a system illegally but without he gets understand"
+    # Strong malicious intent → MALICIOUS + HONEYPOT + Immediate Admin Alert
+    # -----------------------------------------------------------------------
+    elif (
+        bool(re.search(r"\b(?:illegally|unlawfully|without\s+(?:permission|authorization|consent|him\s+knowing|his\s+knowledge|them\s+knowing|getting\s+caught|being\s+detected|he\s+gets\s+understand))\b", text_lower))
+        and bool(re.search(r"\b(?:hack|attack|breach|infiltrate|break\s+into|exploit|compromise)\b", text_lower))
+    ):
+        intent_indicators.append("Covert unauthorized compromise / evasion intent detected")
+        base = {
+            **base,
+            "classification": "MALICIOUS",
+            "threat_type": "Unauthorized Access",
+            "severity": "CRITICAL",
+            "risk_score": 98,
+            "confidence": 0.96,
+            "action": "ADMIN_ALERTED",
+            "reason": "Explicit intent to perform covert unauthorized intrusion.",
+            "categories": list(set(base.get("categories", []) + ["unauthorized_access", "evasion"])),
+        }
+        response_mode = "HONEYPOT"
+        admin_alert = True
+        recommended_action = "Immediate Investigation"
+        context_escalated = True
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 3: Targeted Attack Against Unauthorized Personal Target
+    # "i want to attack my friends system", "i want to hack his system"
+    # -----------------------------------------------------------------------
+    elif (
+        bool(re.search(r"\b(?:attack|hack|breach|infiltrate|exploit|break\s+into)\s+(?:(?:my|a)\s+friend'?s?|his|her|their|someone'?s?)\s*(?:system|computer|phone|account|network|device|laptop|pc)?\b", text_lower))
+        or bool(re.search(r"\b(?:hack|attack|breach)\s+(?:his|her|their|my\s+friend'?s?)\s+system\b", text_lower))
+        or bool(re.search(r"\b(?:attack|hack)\s+my\s+friend\b", text_lower))
+    ):
+        # Check if previous messages also targeted personal or friend systems
+        already_targeted = bool(
+            "friend" in last_user_prompt
+            or "his system" in last_user_prompt
+            or "her system" in last_user_prompt
+            or "their system" in last_user_prompt
+            or (escalation_level >= 2 and last_classification in ("SUSPICIOUS", "MALICIOUS"))
+        )
+        if already_targeted:
+            intent_indicators.append("Persistent targeted attack intent against unauthorized personal system")
+            base = {
+                **base,
+                "classification": "SUSPICIOUS",
+                "threat_type": "Unauthorized Access",
+                "severity": "HIGH",
+                "risk_score": min(100, max(conv_risk + 20, 85)),
+                "confidence": 0.93,
+                "action": "MONITORED",
+                "reason": "Repeated request targeting an unauthorized personal system.",
+                "categories": list(set(base.get("categories", []) + ["unauthorized_access", "targeted_attack"])),
+            }
+            response_mode = "HIGH_RISK"
+            admin_alert = True
+            recommended_action = "Review Required"
+        else:
+            intent_indicators.append("Specific personal system targeted without authorization")
+            base = {
+                **base,
+                "classification": "SUSPICIOUS",
+                "threat_type": "Unauthorized Access",
+                "severity": "HIGH",
+                "risk_score": 75,
+                "confidence": 0.88,
+                "action": "MONITORED",
+                "reason": "Attempt to target an unauthorized personal system.",
+                "categories": list(set(base.get("categories", []) + ["unauthorized_access", "targeted_attack"])),
+            }
+            response_mode = "SAFE_REDIRECT"
+            admin_alert = True
+            recommended_action = "Review Required"
+        context_escalated = True
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 4: Ambiguous Attack Query
+    # "can i attack a system easily" → SUSPICIOUS / Ambiguous → CLARIFICATION
+    # -----------------------------------------------------------------------
+    elif (
+        base.get("threat_type") == "Unauthorized Access Probing"
+        or bool(re.search(r"\b(?:can\s+i\s+attack|can\s+i\s+hack|is\s+it\s+easy\s+to\s+(?:attack|hack))\b", text_lower))
+    ):
+        intent_indicators.append("Ambiguous exploratory query about ease of system attack")
+        base = {
+            **base,
+            "classification": "SUSPICIOUS",
+            "threat_type": "Ambiguous Security Query",
+            "severity": "MEDIUM",
+            "risk_score": 55,
+            "confidence": 0.84,
+            "action": "MONITORED",
+            "reason": "Ambiguous security query regarding ease of attacking systems.",
+            "categories": list(set(base.get("categories", []) + ["ambiguous_security_query"])),
+        }
+        response_mode = "CLARIFICATION"
+        admin_alert = False
+        recommended_action = "Clarify Intent"
+        context_escalated = True
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 5: Honeypot Traps & Direct Exploits
+    # Compliance traps (99-DELTA), Data traps (Project Chimera), Jailbreaks
+    # -----------------------------------------------------------------------
+    elif base["classification"] == "MALICIOUS":
+        intent_indicators.append(f"Adversarial pattern matched: {base.get('threat_type')}")
+        response_mode = "HONEYPOT"
+        admin_alert = True
+        recommended_action = "Immediate Investigation"
+        context_escalated = True
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 6: Harmful real-world requests (violence, self-harm, etc.)
+    # These are NOT security threats — they are content safety issues.
+    # Classify as SAFE for security purposes but use HARMFUL response mode.
+    # -----------------------------------------------------------------------
+    elif _is_harmful_request(text_lower):
+        response_mode = "HARMFUL"
+        admin_alert = False
+        base = {
+            **base,
+            "classification": "SAFE",
+            "threat_type": "None",
+            "severity": "NONE",
+            "risk_score": 5,
+            "action": "ALLOWED",
+            "reason": "Harmful content request — safe refusal applied.",
+        }
+
+    # -----------------------------------------------------------------------
+    # CONTEXT PATTERN 7: Safe Prompts — only use EDUCATIONAL for cyber topics
+    # -----------------------------------------------------------------------
+    elif base["classification"] == "SAFE":
+        # Only switch to EDUCATIONAL if the topic is actually cybersecurity-related
+        is_cyber_topic = _is_cybersecurity_topic(text_lower)
+        # Follow-up "why" after a previous HARMFUL response stays in HARMFUL mode
+        prev_mode = conversation_risk_state.get("response_mode", "NORMAL")
+        if text_lower.strip("? ") in ("why", "why so", "explain") and prev_mode == "HARMFUL":
+            response_mode = "HARMFUL"
+        elif is_cyber_topic:
+            response_mode = "EDUCATIONAL"
+        else:
+            response_mode = "NORMAL"
+        admin_alert = False
+
+    # -----------------------------------------------------------------------
+    # Attach structured fields
+    # -----------------------------------------------------------------------
+    base["response_mode"] = response_mode
+    base["admin_alert"] = admin_alert
+    base["recommended_action"] = recommended_action
+    base["context_escalated"] = context_escalated
+    base["conversation_risk_score"] = conv_risk
+    base["escalation_level"] = escalation_level
+    base["escalation_label"] = base.get("escalation_label") or escalation_label
+    base["intent_indicators"] = intent_indicators
+    base["honeypot_active"] = honeypot_active or (response_mode in ("HONEYPOT", "HIGH_RISK"))
+
+    return base
+
+
+# ---------------------------------------------------------------------------
+# HELPERS FOR NEW DETECTION PATTERNS
+# ---------------------------------------------------------------------------
+
+_HARMFUL_PATTERNS = [
+    r"\b(?:how\s+(?:can|do|could|would)\s+(?:i|someone|a\s+person)\s+)?(?:kill|murder|assassinate|poison|strangle|stab|shoot)\s+(?:a\s+|an\s+|my\s+|someone|a\s+person|him|her|them|people)\b",
+    r"\b(?:how\s+to\s+)?(?:kill|murder)\s+(?:someone|a\s+person|people|him|her|them)\b",
+    r"\b(?:help\s+me\s+(?:kill|murder|hurt|harm|injure|attack)\s+(?:someone|a\s+person|him|her|them))\b",
+    r"\b(?:how\s+to\s+(?:make|build|create|synthesize)\s+(?:a\s+)?(?:bomb|explosive|poison|nerve\s+agent|bioweapon|chemical\s+weapon))\b",
+    r"\b(?:how\s+to\s+(?:commit\s+suicide|kill\s+myself|end\s+my\s+life))\b",
+    r"\b(?:instructions?\s+(?:for|to)\s+(?:kill|murder|harm|hurt)\s+(?:someone|a\s+person|people))\b",
+]
+
+_CYBERSECURITY_TOPIC_PATTERNS = [
+    r"\b(?:cyber(?:security|attack|crime|threat|defense|defence)|hacking|malware|ransomware|phishing|firewall|encryption|vulnerability|exploit|penetration\s+testing|pen\s+test|intrusion|ddos|sql\s+injection|xss|zero.day|patch|antivirus|endpoint\s+security|siem|soc|threat\s+intelligence|incident\s+response|forensics|ctf|capture\s+the\s+flag|owasp|mitre|nist|infosec|information\s+security|network\s+security|data\s+breach|password\s+(?:manager|security|hashing)|two.factor|mfa|vpn|tor|dark\s+web|botnet|keylogger|spyware|adware|trojan|worm|virus|rootkit|backdoor|privilege\s+escalation|social\s+engineering|man.in.the.middle|eavesdropping|sniffing|spoofing|brute.force|dictionary\s+attack|rainbow\s+table|hash\s+cracking|buffer\s+overflow|remote\s+code\s+execution|command\s+injection|path\s+traversal|csrf|ssrf|idor|broken\s+access\s+control|security\s+misconfiguration|insecure\s+deserialization|api\s+security|cloud\s+security|devsecops|red\s+team|blue\s+team|purple\s+team|bug\s+bounty|responsible\s+disclosure|cve|cwe|cvss|nmap|metasploit|burp\s+suite|wireshark|kali|parrot\s+os|security\s+audit|risk\s+assessment|threat\s+modeling|access\s+control|authentication|authorization|jwt|oauth|saml|tls|ssl|certificate|pki|cryptography|steganography|digital\s+forensics|memory\s+forensics|log\s+analysis|anomaly\s+detection|ids|ips|waf|honeypot|deception\s+technology|osint|reconnaissance|enumeration|scanning|payload|shellcode|reverse\s+shell|bind\s+shell|c2|command\s+and\s+control|lateral\s+movement|persistence|exfiltration|cover\s+tracks|anti.forensics)\b",
+    r"\b(?:protect\s+(?:my\s+)?(?:computer|device|network|account|data|system|phone|laptop)|secure\s+(?:my\s+)?(?:computer|device|network|account|data|system)|how\s+(?:safe|secure)\s+is|am\s+i\s+(?:safe|secure)|keep\s+(?:my\s+)?(?:data|account|computer)\s+safe)\b",
+]
+
+
+def _is_harmful_request(text_lower: str) -> bool:
+    """Return True if the prompt requests instructions for serious real-world harm."""
+    return any(re.search(p, text_lower) for p in _HARMFUL_PATTERNS)
+
+
+def _is_cybersecurity_topic(text_lower: str) -> bool:
+    """Return True if the prompt is genuinely about a cybersecurity topic."""
+    return any(re.search(p, text_lower) for p in _CYBERSECURITY_TOPIC_PATTERNS)
 
 
 def _reason(rule: dict) -> str:

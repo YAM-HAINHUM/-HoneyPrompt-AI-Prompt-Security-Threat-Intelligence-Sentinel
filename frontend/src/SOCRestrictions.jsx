@@ -1,37 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
 import CountdownTimer from './CountdownTimer';
-import { API, SocPageHeader, SocCard, SocNotice, fmtTime } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SocNotice, fmtTime } from './socUtils';
 
 export default function SOCRestrictions() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState({ msg: '', type: 'info' });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/api/soc/restrictions`);
+      const res = await axios.get(`${API}/api/soc/restrictions`, { headers: authH() });
       setItems(res.data || []);
     } catch (e) {
-      setNotice({ msg: e.response?.data?.detail || 'Failed to load restrictions', type: 'error' });
+      if (e.response?.status !== 401)
+        setNotice({ msg: e.response?.data?.detail || 'Failed to load restrictions', type: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
     const id = setInterval(load, 10000);
-    return () => clearInterval(id);
-  }, []);
+    const onRefresh = () => load();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
 
   const lift = async (username) => {
     try {
       await axios.patch(`${API}/api/admin/users/${encodeURIComponent(username)}/chat-block`, {
         duration_minutes: 0,
         reason: 'Lifted from Active Restrictions panel',
-      });
+      }, { headers: authH() });
       setNotice({ msg: `Chat restriction lifted for ${username}`, type: 'success' });
       load();
     } catch (e) {

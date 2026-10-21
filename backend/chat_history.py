@@ -2,13 +2,12 @@
 Conversation and message persistence for HoneyPrompt chat history.
 Stored in conversations.json alongside the existing attacks.json.
 """
-import json
-import os
 import re
 import uuid
 from datetime import datetime
+from storage_paths import data_file, read_json, write_json
 
-CONV_FILE = "conversations.json"
+CONV_FILE = data_file("conversations.json")
 
 
 def _redact_sensitive_text(value: str) -> str:
@@ -17,23 +16,14 @@ def _redact_sensitive_text(value: str) -> str:
 
 
 def _read_store() -> dict:
-    if not os.path.exists(CONV_FILE):
-        return {"conversations": [], "messages": []}
-    try:
-        with open(CONV_FILE, "r") as f:
-            data = json.load(f)
-        if "conversations" not in data:
-            data["conversations"] = []
-        if "messages" not in data:
-            data["messages"] = []
-        return data
-    except Exception:
-        return {"conversations": [], "messages": []}
+    data = read_json(CONV_FILE, {"conversations": [], "messages": []})
+    data.setdefault("conversations", [])
+    data.setdefault("messages", [])
+    return data
 
 
 def _write_store(data: dict):
-    with open(CONV_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    write_json(CONV_FILE, data)
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +49,34 @@ def get_conversations(user_id: str) -> list:
     uid = user_id.casefold()
     convs = [c for c in store["conversations"] if c["user_id"] == uid]
     return sorted(convs, key=lambda c: c["updated_at"], reverse=True)
+
+
+def get_conversation_summaries(user_id: str) -> list:
+    store = _read_store()
+    uid = user_id.casefold()
+    messages_by_conversation: dict[str, list[dict]] = {}
+    for message in store["messages"]:
+        if message.get("user_id") == uid:
+            messages_by_conversation.setdefault(message["conversation_id"], []).append(message)
+
+    summaries = []
+    for conversation in store["conversations"]:
+        if conversation.get("user_id") != uid:
+            continue
+        messages = messages_by_conversation.get(conversation["conversation_id"], [])
+        classifications = [message.get("classification", "SAFE") for message in messages]
+        security_status = (
+            "MALICIOUS" if "MALICIOUS" in classifications
+            else "SUSPICIOUS" if "SUSPICIOUS" in classifications
+            else "SAFE"
+        )
+        summaries.append({
+            **conversation,
+            "first_prompt_preview": (messages[0].get("prompt", "")[:120] if messages else ""),
+            "message_count": len(messages),
+            "security_status": security_status,
+        })
+    return sorted(summaries, key=lambda item: item.get("updated_at", ""), reverse=True)
 
 
 def get_conversation(conversation_id: str, user_id: str) -> dict | None:
@@ -116,6 +134,8 @@ def add_message(
     risk_score: int,
     action: str,
     reason: str = "",
+    request_id: str | None = None,
+    timestamp: str | None = None,
 ) -> dict:
     store = _read_store()
     uid = user_id.casefold()
@@ -134,7 +154,8 @@ def add_message(
         "risk_score": risk_score,
         "action": action,
         "reason": reason,
-        "timestamp": datetime.now().isoformat(),
+        "request_id": request_id,
+        "timestamp": timestamp or datetime.now().isoformat(),
     }
     store["messages"].append(msg)
     # Update conversation updated_at and auto-title from first prompt

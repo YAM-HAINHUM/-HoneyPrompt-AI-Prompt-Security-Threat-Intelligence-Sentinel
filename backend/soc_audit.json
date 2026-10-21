@@ -414,5 +414,179 @@
     "action": "USER_UNBLOCKED",
     "target": "yammahajan0312@gmail.com",
     "reason": "Restriction lifted by administrator"
+  },
+  {
+    "audit_id": "FA8C9E73-667",
+    "timestamp": "2026-10-08T21:58:18.287002",
+    "admin": "admin_01",
+    "action": "NOTIFICATION_SENT",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "j m"
+  },
+  {
+    "audit_id": "4D18E245-683",
+    "timestamp": "2026-10-08T23:15:26.244960",
+    "admin": "admin_01",
+    "action": "NOTIFICATION_SENT",
+    "target": "__all__",
+    "reason": "testq"
+  },
+  {
+    "audit_id": "1C6DF593-644",
+    "timestamp": "2026-10-08T23:15:45.359448",
+    "admin": "admin_01",
+    "action": "NOTIFICATION_SENT",
+    "target": "__all__",
+    "reason": "test`"
+  },
+  {
+    "audit_id": "1383BBF1-ED3",
+    "timestamp": "2026-10-08T23:28:01.844639",
+    "admin": "SENTINEL",
+    "action": "Review Required",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Alert ALT-D248FCE5: Unauthorized Access (Risk: 75)",
+    "alert_id": "ALT-D248FCE5",
+    "risk_score": 75,
+    "severity": "HIGH",
+    "threat_type": "Unauthorized Access"
+  },
+  {
+    "audit_id": "0605AC3C-8B7",
+    "timestamp": "2026-10-08T23:28:36.686212",
+    "admin": "SENTINEL",
+    "action": "Immediate Investigation",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Alert ALT-97AF0AEB: Harmful Request (Risk: 100)",
+    "alert_id": "ALT-97AF0AEB",
+    "risk_score": 100,
+    "severity": "CRITICAL",
+    "threat_type": "Harmful Request"
+  },
+  {
+    "audit_id": "8DCC69CC-65A",
+    "timestamp": "2026-10-08T23:30:31.272888",
+    "admin": "admin_01",
+    "action": "ALERT_STATUS_CHANGED_INVESTIGATING",
+    "target": "ALT-97AF0AEB",
+    "reason": ""
+  },
+  {
+    "audit_id": "DF6C057C-4AE",
+    "timestamp": "2026-10-08T23:30:34.252898",
+    "admin": "admin_01",
+    "action": "ALERT_STATUS_CHANGED_DISMISSED",
+    "target": "ALT-97AF0AEB",
+    "reason": ""
+  },
+  {
+    "audit_id": "397EC2C2-94C",
+    "timestamp": "2026-10-09T09:19:15.098344",
+    "admin": "admin_01",
+    "action": "SECURITY_TEST_PROMPT",
+    "target": "",
+    "reason": "kill person"
+  },
+  {
+    "audit_id": "7E0E036C-D03",
+    "timestamp": "2026-10-09T09:19:38.803359",
+    "admin": "admin_01",
+    "action": "SECURITY_TEST_PROMPT",
+    "target": "",
+    "reason": "killing a person"
+  },
+  {
+    "audit_id": "44FB0A6D-A5F",
+    "timestamp": "2026-10-09T09:21:35.911422",
+    "admin": "admin_01",
+    "action": "NOTIFICATION_SENT",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "daz"
+  },
+  {
+    "audit_id": "81CCCAE1-012",
+    "timestamp": "2026-10-09T09:34:56.982882",
+    "admin": "SENTINEL",
+    "action": "Immediate Investigation",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Alert ALT-98C0EAA9: Harmful Request (Risk: 100)",
+    "alert_id": "ALT-98C0EAA9",
+    "risk_score": 100,
+    "severity": "CRITICAL",
+    "threat_type": "Harmful Request"
+  },
+  {
+    "audit_id": "B51F1431-425",
+    "timestamp": "2026-10-09T10:09:22.968059",
+    "admin": "admin_01",
+    "action": "ALERT_STATUS_CHANGED_DISMISSED",
+    "target": "ALT-98C0EAA9",
+    "reason": ""
+  },
+  {
+    "audit_id": "25A4172A-F09",
+    "timestamp": "2026-10-09T13:10:05.160663",
+    "admin": "SENTINEL",
+    "action": "Immediate Investigation",
+    "target": "analyst",
+    "reason": "Alert ALT-CAFD73DB: System Prompt Extraction (Risk: 100)",
+    "alert_id": "ALT-CAFD73DB",
+    "risk_score": 100,
+    "severity": "HIGH",
+    "threat_type": "System Prompt Extraction"
+  },
+  {
+    "audit_id": "149D7B4C-F27",
+    "timestamp": "2026-10-09T13:10:18.359616",
+    "admin": "admin",
+    "action": "USER_BLOCKED",
+    "target": "analyst",
+    "reason": "Manual account review",
+    "duration_minutes": 1,
+    "blocked_until": "2026-10-09T13:11:18.357168"
+  },
+  {
+    "audit_id": "0210D21D-A7B",
+    "timestamp": "2026-10-09T13:10:18.527143",
+    "admin": "admin",
+    "action": "USER_UNBLOCKED",
+    "target": "analyst",
+    "reason": "Restriction lifted by an administrator."
+  },
+  {
+    "audit_id": "13F51025-DA7",
+    "timestamp": "2026-10-09T14:16:59.955897",
+    "admin": "admin_01",
+    "action": "NOTIFICATION_SENT",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "VC"
+  },
+  {
+    "audit_id": "E102574F-716",
+    "timestamp": "2026-10-09T14:17:26.828376",
+    "admin": "admin_01",
+    "action": "USER_BLOCKED",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Administrative security enforcement",
+    "duration_minutes": 10080,
+    "blocked_until": "2026-10-16T14:17:26.791447"
+  },
+  {
+    "audit_id": "F369463A-386",
+    "timestamp": "2026-10-09T14:18:33.372680",
+    "admin": "admin_01",
+    "action": "USER_UNBLOCKED",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Restriction lifted by administrator"
+  },
+  {
+    "audit_id": "B5A53430-266",
+    "timestamp": "2026-10-10T17:38:09.732722",
+    "admin": "admin_01",
+    "action": "USER_BLOCKED",
+    "target": "yammahajan0312@gmail.com",
+    "reason": "Administrative security enforcement",
+    "duration_minutes": -1,
+    "blocked_until": "2099-12-31T23:59:59"
   }
 ]

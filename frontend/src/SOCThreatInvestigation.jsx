@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
-import { API, SocPageHeader, SocCard, SevBadge, ClfBadge, SocNotice, SocPagination, fmtTime, fmtPct } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SevBadge, ClfBadge, SocNotice, SocPagination, fmtTime, fmtPct } from './socUtils';
 
 export default function SOCThreatInvestigation() {
   const [logs, setLogs] = useState([]);
@@ -13,14 +13,10 @@ export default function SOCThreatInvestigation() {
   const [expanded, setExpanded] = useState(null);
   const [notice, setNotice] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, page_size: 50 });
-      if (search) params.set('search', search);
-      if (clf) params.set('classification', clf);
-      // Use admin logs endpoint with pagination
-      const res = await axios.get(`${API}/api/logs`);
+      const res = await axios.get(`${API}/api/logs`, { headers: authH() });
       let all = (res.data || []).filter(l => !l.is_test).reverse();
       if (clf) all = all.filter(l => l.classification === clf);
       if (search) all = all.filter(l => JSON.stringify(l).toLowerCase().includes(search.toLowerCase()));
@@ -28,14 +24,30 @@ export default function SOCThreatInvestigation() {
       const offset = (page - 1) * 50;
       setLogs(all.slice(offset, offset + 50));
     } catch (e) {
-      setNotice(e.response?.data?.detail || 'Failed to load threat logs');
+      if (e.response?.status !== 401)
+        setNotice(e.response?.data?.detail || 'Failed to load threat logs');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, clf, search]);
 
-  useEffect(() => { load(); }, [page, clf]);
-  const handleSearch = (e) => { e.preventDefault(); setPage(1); load(); };
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 10000);
+    const onRefresh = () => load();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
+
+  const handleSearch = (e) => { e.preventDefault(); setPage(1); };
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 30 }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import {
   FileText,
@@ -167,7 +167,7 @@ export default function SOCReports() {
     return e.response?.data?.detail || fallback;
   };
 
-  const fetchPreview = async (type = reportType, openModal = false) => {
+  const fetchPreview = useCallback(async (type = reportType, openModal = false) => {
     setLoading(true);
     setLoadingMsg('HoneyPrompt is compiling security telemetry...');
     setNotice({ msg: '', type: 'info' });
@@ -203,7 +203,8 @@ export default function SOCReports() {
     } finally {
       setLoading(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportType, dateRange, dateFrom, dateTo, classification, severity, threatType, userFilter, actionFilter, statusFilter, loadHistory]);
 
   const exportPDF = async (customFilters = null) => {
     setExportingPdf(true);
@@ -291,7 +292,7 @@ export default function SOCReports() {
     }
   };
 
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
       const res = await axios.get(`${API}/api/admin/reports/history?page=1&page_size=30`, {
@@ -303,12 +304,24 @@ export default function SOCReports() {
     } finally {
       setHistoryLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPreview(reportType);
     loadHistory();
-  }, [reportType, dateRange]);
+    const id = setInterval(loadHistory, 15000);
+    const onRefresh = () => { loadHistory(); fetchPreview(reportType); };
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') { loadHistory(); fetchPreview(reportType); } };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [reportType, dateRange, loadHistory, fetchPreview]);
 
   const currentTypeConfig = REPORT_TYPES.find(t => t.id === reportType) || REPORT_TYPES[0];
 

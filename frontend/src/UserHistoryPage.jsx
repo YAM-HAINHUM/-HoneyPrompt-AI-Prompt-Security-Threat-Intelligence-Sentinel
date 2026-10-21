@@ -3,6 +3,9 @@ import axios from 'axios';
 import { AlertCircle, Check, ChevronDown, Search } from 'lucide-react';
 import LoadingState from './LoadingState';
 
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
+
 const CLASSIFICATIONS = ['All', 'SAFE', 'SUSPICIOUS', 'MALICIOUS'];
 
 export default function UserHistoryPage() {
@@ -21,7 +24,8 @@ export default function UserHistoryPage() {
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/user/history', {
+      const response = await axios.get(`${API}/api/user/history`, {
+        headers: authH(),
         params: {
           page,
           page_size: 10,
@@ -35,7 +39,8 @@ export default function UserHistoryPage() {
       setPageData(response.data);
       setError('');
     } catch (requestError) {
-      setError(requestError.response?.data?.detail || 'Your security history could not be loaded.');
+      if (requestError.response?.status !== 401)
+        setError(requestError.response?.data?.detail || 'Your security history could not be loaded.');
     } finally {
       setLoading(false);
     }

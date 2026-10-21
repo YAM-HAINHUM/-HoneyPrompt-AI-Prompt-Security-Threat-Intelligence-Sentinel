@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import LoadingState from './LoadingState';
-import { API, SocPageHeader, SocCard, SevBadge, StatusBadge, SocNotice, SocPagination, fmtTime } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SevBadge, StatusBadge, SocNotice, SocPagination, fmtTime } from './socUtils';
 
 const SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 const STATUSES = ['OPEN', 'INVESTIGATING', 'CONTAINMENT', 'RESOLVED'];
@@ -19,22 +19,37 @@ export default function SOCIncidents() {
   const [noteText, setNoteText] = useState('');
   const [updating, setUpdating] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page, page_size: 50 });
       if (statusFilter) params.set('status', statusFilter);
-      const res = await axios.get(`${API}/api/soc/incidents?${params}`);
+      const res = await axios.get(`${API}/api/soc/incidents?${params}`, { headers: authH() });
       setItems(res.data.items || []);
       setTotal(res.data.total || 0);
     } catch (e) {
-      setNotice({ msg: e.response?.data?.detail || 'Failed to load incidents', type: 'error' });
+      if (e.response?.status !== 401)
+        setNotice({ msg: e.response?.data?.detail || 'Failed to load incidents', type: 'error' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, statusFilter]);
 
-  useEffect(() => { load(); }, [page, statusFilter]);
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 10000);
+    const onRefresh = () => load();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
 
   const createIncident = async () => {
     if (!form.title.trim() || !form.description.trim()) {
@@ -42,7 +57,7 @@ export default function SOCIncidents() {
       return;
     }
     try {
-      await axios.post(`${API}/api/soc/incidents`, form);
+      await axios.post(`${API}/api/soc/incidents`, form, { headers: authH() });
       setNotice({ msg: 'Incident created', type: 'success' });
       setCreating(false);
       setForm({ title: '', severity: 'HIGH', description: '' });
@@ -55,7 +70,7 @@ export default function SOCIncidents() {
   const updateIncident = async (id, updates) => {
     setUpdating(id);
     try {
-      await axios.patch(`${API}/api/soc/incidents/${id}`, updates);
+      await axios.patch(`${API}/api/soc/incidents/${id}`, updates, { headers: authH() });
       setNotice({ msg: 'Incident updated', type: 'success' });
       setNoteText('');
       load();

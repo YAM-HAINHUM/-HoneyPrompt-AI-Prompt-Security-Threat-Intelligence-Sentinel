@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { Activity, AlertTriangle, Database, Radio, RefreshCw, Server, Shield, ShieldCheck, ShieldX } from 'lucide-react';
 
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
+
 const EVENT_STYLE = {
   SAFE: { icon: ShieldCheck, className: 'event-icon-safe' },
   SUSPICIOUS: { icon: AlertTriangle, className: 'event-icon-suspicious' },
@@ -16,9 +19,10 @@ export default function LiveSentinelPage() {
 
   const refresh = useCallback(async () => {
     try {
+      const headers = authH();
       const [statusResponse, logsResponse] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/status'),
-        axios.get('http://127.0.0.1:8000/api/logs'),
+        axios.get(`${API}/status`),
+        axios.get(`${API}/api/logs`, { headers }),
       ]);
       setStatus(statusResponse.data);
       setEvents(logsResponse.data.slice().reverse().slice(0, 25));
@@ -32,9 +36,17 @@ export default function LiveSentinelPage() {
   useEffect(() => {
     const initialRefresh = window.setTimeout(refresh, 0);
     const intervalId = window.setInterval(refresh, 5000);
+    const onRefresh = () => refresh();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.clearTimeout(initialRefresh);
       window.clearInterval(intervalId);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, [refresh]);
 

@@ -15,12 +15,13 @@ import os
 import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
+from storage_paths import data_file, read_json, write_json
 
-ALERTS_FILE = "soc_alerts.json"
-INCIDENTS_FILE = "soc_incidents.json"
-AUDIT_FILE = "soc_audit.json"
-POLICIES_FILE = "soc_policies.json"
-RISK_FILE = "soc_risk.json"
+ALERTS_FILE = data_file("soc_alerts.json")
+INCIDENTS_FILE = data_file("soc_incidents.json")
+AUDIT_FILE = data_file("soc_audit.json")
+POLICIES_FILE = data_file("soc_policies.json")
+RISK_FILE = data_file("soc_risk.json")
 
 DEFAULT_POLICIES = {
     "warning_threshold": 3,
@@ -46,28 +47,15 @@ SEVERITY_ORDER = {"NONE": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
 # ---------------------------------------------------------------------------
 
 def _read(path):
-    if not os.path.exists(path):
-        return []
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return read_json(path, [])
 
 
 def _read_dict(path):
-    if not os.path.exists(path):
-        return {}
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    return read_json(path, {})
 
 
 def _write(path, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    write_json(path, data, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------------------
@@ -141,17 +129,25 @@ def create_alert(
     session_id: str = "",
     categories: list | None = None,
     is_test: bool = False,
+    conversation_id: str | None = None,
+    timestamp: str | None = None,
+    recommended_action: str | None = None,
 ) -> dict:
+    # Sanitise None / empty threat_type that can come from the detection layer
+    clean_threat_type = str(threat_type) if threat_type and str(threat_type) not in ("None", "none", "") else "Unknown Threat"
     alert = {
         "alert_id": "ALT-" + str(uuid.uuid4())[:8].upper(),
         "request_id": request_id,
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": timestamp or datetime.now().isoformat(),
         "user": user,
-        "threat_type": threat_type,
-        "severity": severity,
+        "user_id": user,
+        "conversation_id": conversation_id or session_id,
+        "threat_type": clean_threat_type,
+        "severity": severity or "MEDIUM",
         "confidence": confidence,
         "risk_score": risk_score,
         "action": action,
+        "recommended_action": recommended_action,
         "prompt_preview": prompt_preview[:200],
         "reason": reason[:500],
         "session_id": session_id,
@@ -174,7 +170,13 @@ def get_alerts(
     user_filter: str = "",
     exclude_test: bool = True,
 ) -> dict:
-    alerts = list(reversed(_read_alerts()))
+    raw = list(reversed(_read_alerts()))
+    alerts = []
+    for a in raw:
+        # Sanitise legacy "None" string stored by old code
+        if a.get("threat_type") in (None, "None", "none", ""):
+            a = {**a, "threat_type": "Unknown Threat"}
+        alerts.append(a)
     if exclude_test:
         alerts = [a for a in alerts if not a.get("is_test")]
     if severity_filter:
@@ -290,7 +292,14 @@ def _write_risk(data: dict):
     _write(RISK_FILE, data)
 
 
-def update_user_risk(username: str, analysis: dict, is_malicious: bool) -> dict:
+def update_user_risk(
+    username: str,
+    analysis: dict,
+    is_malicious: bool,
+    conversation_id: str | None = None,
+    request_id: str | None = None,
+    timestamp: str | None = None,
+) -> dict:
     key = username.casefold()
     data = _read_risk()
     rec = data.get(key, {
@@ -302,14 +311,27 @@ def update_user_risk(username: str, analysis: dict, is_malicious: bool) -> dict:
         "last_threat": None,
         "last_threat_type": None,
         "last_activity": None,
+        "last_classification": None,
+        "last_severity": None,
+        "last_risk_score": None,
+        "last_action": None,
+        "last_conversation_id": None,
+        "last_request_id": None,
         "total_prompts": 0,
     })
     rec["total_prompts"] = rec.get("total_prompts", 0) + 1
-    rec["last_activity"] = datetime.now().isoformat()
+    activity_timestamp = timestamp or datetime.now().isoformat()
+    rec["last_activity"] = activity_timestamp
+    rec["last_classification"] = analysis.get("classification", "SAFE")
+    rec["last_severity"] = analysis.get("severity", "NONE")
+    rec["last_risk_score"] = analysis.get("risk_score", 0)
+    rec["last_action"] = analysis.get("action", "ALLOWED")
+    rec["last_conversation_id"] = conversation_id
+    rec["last_request_id"] = request_id
     if is_malicious:
         rec["malicious_count"] = rec.get("malicious_count", 0) + 1
         rec["consecutive_attacks"] = rec.get("consecutive_attacks", 0) + 1
-        rec["last_threat"] = datetime.now().isoformat()
+        rec["last_threat"] = activity_timestamp
         rec["last_threat_type"] = analysis.get("threat_type", "Unknown")
     elif analysis.get("classification") == "SUSPICIOUS":
         rec["suspicious_count"] = rec.get("suspicious_count", 0) + 1
@@ -347,6 +369,12 @@ def get_user_risk(username: str) -> dict:
         "last_threat": None,
         "last_threat_type": None,
         "last_activity": None,
+        "last_classification": None,
+        "last_severity": None,
+        "last_risk_score": None,
+        "last_action": None,
+        "last_conversation_id": None,
+        "last_request_id": None,
         "total_prompts": 0,
     })
 
@@ -392,7 +420,11 @@ def get_threat_intelligence(hours: int = 24) -> dict:
     suspicious = [l for l in recent if l.get("classification") == "SUSPICIOUS"]
     safe = [l for l in recent if l.get("classification") == "SAFE"]
 
-    attack_types = Counter(l.get("threat_type", "Unknown") for l in malicious)
+    attack_types = Counter(
+        l.get("threat_type", "Unknown")
+        for l in malicious
+        if l.get("threat_type") not in (None, "None", "none", "")
+    )
     severity_dist = Counter(l.get("severity", "NONE") for l in recent)
     user_attacks = Counter(l.get("user", "unknown") for l in malicious)
     fp_count = sum(1 for l in recent if l.get("false_positive_report"))

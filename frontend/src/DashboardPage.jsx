@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { AlertTriangle, ShieldCheck, ShieldX, Activity, Shield, Eye, Users, UserCheck, ShieldAlert, Check, ArrowUpRight } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import LoadingState from './LoadingState';
+
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
 
 function StatCard({ label, value, color, icon: Icon, loading = false }) {
   return (
@@ -28,29 +31,45 @@ export default function DashboardPage() {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [sRes, lRes, aRes] = await Promise.all([
-          axios.get(`http://127.0.0.1:8000${isAdmin ? '/api/admin/stats' : '/api/user/stats'}`),
-          isAdmin
-            ? axios.get('http://127.0.0.1:8000/api/logs')
-            : axios.get('http://127.0.0.1:8000/api/user/history', { params: { page: 1, page_size: 20 } }),
-          axios.get(`http://127.0.0.1:8000${isAdmin ? '/api/admin/alerts' : '/api/user/alerts'}`),
-        ]);
-        setStats(sRes.data);
-        setLogs(isAdmin ? lRes.data.slice().reverse().slice(0, 10) : lRes.data.items);
-        setAlerts(aRes.data.slice(0, 4));
-      } catch (error) {
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const headers = authH();
+      const [sRes, lRes, aRes] = await Promise.all([
+        axios.get(`${API}${isAdmin ? '/api/admin/stats' : '/api/user/stats'}`, { headers }),
+        isAdmin
+          ? axios.get(`${API}/api/logs`, { headers })
+          : axios.get(`${API}/api/user/history`, { params: { page: 1, page_size: 20 }, headers }),
+        axios.get(`${API}${isAdmin ? '/api/admin/alerts' : '/api/user/alerts'}`, { headers }),
+      ]);
+      setStats(sRes.data);
+      setLogs(isAdmin ? [...lRes.data].reverse().slice(0, 10) : lRes.data.items);
+      setAlerts((aRes.data?.items || aRes.data || []).slice(0, 4));
+      setNotice('');
+    } catch (error) {
+      if (error.response?.status !== 401) {
         setNotice(error.response?.data?.detail || 'Dashboard data could not be refreshed.');
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
     fetchDashboard();
     const id = setInterval(fetchDashboard, 10000);
-    return () => clearInterval(id);
-  }, [isAdmin]);
+    // Also refresh immediately when a new security event arrives via SSE
+    const onRefresh = () => fetchDashboard();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchDashboard(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [fetchDashboard]);
 
   const reportFalsePositive = async (entry) => {
     try {
@@ -131,7 +150,7 @@ export default function DashboardPage() {
               {alerts.length === 0
                 ? <p className="empty-state">No malicious activity recorded.</p>
                 : alerts.map(alert => (
-                  <article className={`security-event-row${alert.repeated_malicious_activity ? ' multiple-attempts-alert' : ''}`} key={alert.request_id}>
+                  <article className={`security-event-row${alert.repeated_malicious_activity ? ' multiple-attempts-alert' : ''}`} key={alert.alert_id || alert.request_id}>
                     <span className="event-icon event-icon-danger"><ShieldX size={16} /></span>
                     <div className="event-details">
                       <strong>{alert.repeated_malicious_activity ? `Repeated · ${alert.consecutive_count}×` : alert.threat_type}</strong>

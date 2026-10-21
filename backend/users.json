@@ -6,7 +6,7 @@
     "password_hash": "404670db1d50742329ab13fb70cb7356335ce45488f99c766e01e78c6e0b0b53",
     "role": "Admin",
     "created_at": "2026-10-04T20:09:59.236492",
-    "last_login": "2026-10-08T15:59:31.069556"
+    "last_login": "2026-10-10T17:40:04.287918"
   },
   "yammahajan0312@gmail.com": {
     "username": "yammahajan0312@gmail.com",
@@ -15,9 +15,9 @@
     "password_hash": "404670db1d50742329ab13fb70cb7356335ce45488f99c766e01e78c6e0b0b53",
     "role": "User",
     "is_active": true,
-    "is_blocked": false,
+    "is_blocked": true,
     "created_at": "2026-10-04T22:40:34.248064",
-    "last_login": "2026-10-08T15:59:11.850589"
+    "last_login": "2026-10-10T17:32:26.598952"
   },
   "test_report_user": {
     "username": "test_report_user",

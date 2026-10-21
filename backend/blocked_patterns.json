@@ -28,5 +28,12 @@
     "is_active": true,
     "created_by": "admin_01",
     "created_at": "2026-10-08T15:25:19.064493"
+  },
+  {
+    "id": "976a52a1-5712-44d3-96ae-571addb00b9d",
+    "phrase": "kill",
+    "is_active": true,
+    "created_by": "admin_01",
+    "created_at": "2026-10-09T09:19:29.131723"
   }
 ]

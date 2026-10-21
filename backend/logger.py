@@ -2,31 +2,46 @@ import json
 import os
 import uuid
 from datetime import datetime
+from storage_paths import data_file, read_json, write_json
 
-LOG_FILE = "attacks.json"
+LOG_FILE = data_file("attacks.json")
 
 
-def log_event(user_message: str, analysis: dict, ai_response: str, session_id: str = "default-session", user: str = "Admin_01", extra_fields: dict | None = None):
+def log_event(
+    user_message: str,
+    analysis: dict,
+    ai_response: str,
+    session_id: str = "default-session",
+    user: str = "Admin_01",
+    extra_fields: dict | None = None,
+    request_id: str | None = None,
+    timestamp: str | None = None,
+):
     """Logs every request (safe, suspicious, or malicious) to attacks.json."""
+    classification = analysis.get("classification") or "SAFE"
+    threat_type_raw = analysis.get("threat_type")
+    threat_type = str(threat_type_raw) if threat_type_raw and str(threat_type_raw) not in ("None", "none", "") else ("Normal Query" if classification == "SAFE" else "Unknown Threat")
     entry = {
-        "request_id": str(uuid.uuid4())[:8].upper(),
-        "timestamp": datetime.now().isoformat(),
+        "request_id": request_id or str(uuid.uuid4())[:8].upper(),
+        "timestamp": timestamp or datetime.now().isoformat(),
         "user": user,
+        "user_id": user,
         "session_id": session_id,
         "prompt_preview": user_message[:120] + ("..." if len(user_message) > 120 else ""),
-        "classification": analysis.get("classification", "SAFE"),
-        "threat_type": analysis.get("threat_type", "Normal Query"),
-        "severity": analysis.get("severity", "NONE"),
-        "risk_score": analysis.get("risk_score", 0),
-        "confidence": analysis.get("confidence", 0.0),
-        "action": analysis.get("action", "ALLOWED"),
-        "reason": analysis.get("reason", ""),
-        "categories": analysis.get("categories", []),
+        "classification": classification,
+        "threat_type": threat_type,
+        "severity": analysis.get("severity") or "NONE",
+        "risk_score": analysis.get("risk_score") or 0,
+        "confidence": analysis.get("confidence") or 0.0,
+        "action": analysis.get("action") or "ALLOWED",
+        "reason": analysis.get("reason") or "",
+        "categories": analysis.get("categories") or [],
         "llm_status": "BYPASSED" if analysis.get("action") == "BLOCKED" else "CALLED",
         "response_preview": ai_response[:80] + ("..." if len(ai_response) > 80 else ""),
     }
     if extra_fields:
         entry.update(extra_fields)
+    entry.setdefault("conversation_id", session_id)
 
     logs = _read_logs()
     logs.append(entry)
@@ -44,7 +59,8 @@ def get_logs():
 
 
 def get_stats():
-    logs = _read_logs()
+    all_logs = _read_logs()
+    logs = [l for l in all_logs if not l.get("is_test")]
     total = len(logs)
     safe = sum(1 for l in logs if l.get("classification") == "SAFE")
     suspicious = sum(1 for l in logs if l.get("classification") == "SUSPICIOUS")
@@ -81,12 +97,19 @@ def get_user_alerts(username: str, limit: int = 20):
     owner = username.casefold()
     alerts = [
         entry for entry in reversed(_read_logs())
-        if entry.get("user", "").casefold() == owner and entry.get("classification") != "SAFE"
+        if entry.get("user", "").casefold() == owner
+        and entry.get("classification") != "SAFE"
+        and not entry.get("is_test")
     ][:limit]
-    return [
-        {**{key: value for key, value in entry.items() if key != "read_by"}, "is_read": owner in [name.casefold() for name in entry.get("read_by", [])]}
-        for entry in alerts
-    ]
+    result = []
+    for entry in alerts:
+        row = {key: value for key, value in entry.items() if key != "read_by"}
+        # Normalise legacy "None" string stored by old logger
+        if row.get("threat_type") in ("None", "none", None, ""):
+            row["threat_type"] = "Unknown Threat"
+        row["is_read"] = owner in [name.casefold() for name in entry.get("read_by", [])]
+        result.append(row)
+    return result
 
 
 def mark_alert_read(request_id: str, username: str):
@@ -107,15 +130,8 @@ def mark_alert_read(request_id: str, username: str):
 
 
 def _read_logs():
-    if not os.path.exists(LOG_FILE):
-        return []
-    try:
-        with open(LOG_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return read_json(LOG_FILE, [])
 
 
 def _write_logs(logs):
-    with open(LOG_FILE, "w") as f:
-        json.dump(logs, f, indent=2)
+    write_json(LOG_FILE, logs)

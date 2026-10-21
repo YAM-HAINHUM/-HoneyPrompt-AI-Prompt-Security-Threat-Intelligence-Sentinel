@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { ChevronDown, RefreshCw } from 'lucide-react';
 
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
+
 const CLF_COLOR = { SAFE: '#10b981', SUSPICIOUS: '#f59e0b', MALICIOUS: '#ef4444' };
 const SEV_COLOR = { CRITICAL: '#dc2626', HIGH: '#ef4444', MEDIUM: '#f59e0b', LOW: '#10b981', NONE: '#64748b' };
 
@@ -16,19 +19,28 @@ export default function AuditLogsPage() {
   const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/logs');
+      const res = await axios.get(`${API}/api/logs`, { headers: authH() });
       setLogs(res.data.slice().reverse());
       setLoadError('');
     } catch (error) {
-      setLoadError(error.response?.data?.detail || 'Audit events could not be loaded.');
+      if (error.response?.status !== 401)
+        setLoadError(error.response?.data?.detail || 'Audit events could not be loaded.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const initialLoad = window.setTimeout(fetchLogs, 0);
-    return () => window.clearTimeout(initialLoad);
+    fetchLogs();
+    const id = setInterval(fetchLogs, 10000);
+    const onRefresh = () => fetchLogs();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+    };
   }, [fetchLogs]);
 
   const filtered = logs.filter(l => {

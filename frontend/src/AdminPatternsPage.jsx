@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Plus, ShieldAlert, ToggleLeft, ToggleRight } from 'lucide-react';
 import LoadingState from './LoadingState';
+
+const API = 'http://127.0.0.1:8000';
+const authH = () => { const t = localStorage.getItem('hp_token'); return t ? { Authorization: `Bearer ${t}` } : {}; };
 
 export default function AdminPatternsPage() {
   const [patterns, setPatterns] = useState([]);
@@ -9,25 +12,26 @@ export default function AdminPatternsPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/admin/patterns');
+      const response = await axios.get(`${API}/api/admin/patterns`, { headers: authH() });
       setPatterns(response.data);
     } catch (requestError) {
-      setError(requestError.response?.data?.detail || 'Unable to load security rules.');
+      if (requestError.response?.status !== 401)
+        setError(requestError.response?.data?.detail || 'Unable to load security rules.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(); }, [refresh]);
 
   const addPattern = async (event) => {
     event.preventDefault();
     if (!phrase.trim()) return;
     setError('');
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/admin/patterns', { phrase: phrase.trim() });
+      const response = await axios.post(`${API}/api/admin/patterns`, { phrase: phrase.trim() }, { headers: authH() });
       setPatterns(current => [...current, response.data]);
       setPhrase('');
     } catch (requestError) {
@@ -37,7 +41,7 @@ export default function AdminPatternsPage() {
 
   const togglePattern = async (pattern) => {
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/admin/patterns/${pattern.id}`, { is_active: !pattern.is_active });
+      const response = await axios.patch(`${API}/api/admin/patterns/${pattern.id}`, { is_active: !pattern.is_active }, { headers: authH() });
       setPatterns(current => current.map(item => item.id === response.data.id ? response.data : item));
     } catch (requestError) {
       setError(requestError.response?.data?.detail || 'Unable to update this rule.');

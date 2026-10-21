@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { API, SocPageHeader, SocCard, SocNotice, SocPagination, fmtTime } from './socUtils';
+import { API, authH, SocPageHeader, SocCard, SocNotice, SocPagination, fmtTime } from './socUtils';
 
 export default function SOCAuditLogs() {
   const [items, setItems] = useState([]);
@@ -10,22 +10,37 @@ export default function SOCAuditLogs() {
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page, page_size: 50 });
       if (actionFilter) params.set('action', actionFilter);
-      const res = await axios.get(`${API}/api/soc/audit?${params}`);
+      const res = await axios.get(`${API}/api/soc/audit?${params}`, { headers: authH() });
       setItems(res.data.items || []);
       setTotal(res.data.total || 0);
     } catch (e) {
-      setNotice(e.response?.data?.detail || 'Failed to load audit logs');
+      if (e.response?.status !== 401)
+        setNotice(e.response?.data?.detail || 'Failed to load audit logs');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, actionFilter]);
 
-  useEffect(() => { load(); }, [page, actionFilter]);
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 10000);
+    const onRefresh = () => load();
+    window.addEventListener('hp-data-refresh', onRefresh);
+    window.addEventListener('hp-admin-alert', onRefresh);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener('hp-data-refresh', onRefresh);
+      window.removeEventListener('hp-admin-alert', onRefresh);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 30 }}>
